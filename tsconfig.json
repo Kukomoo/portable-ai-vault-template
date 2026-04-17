@@ -32,5 +32,6 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
+  // Explicitly excluding "node_modules" for clarity; add more exclusions here if needed.
   "exclude": ["node_modules"]
 }
