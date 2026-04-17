@@ -1,6 +1,7 @@
 // app/layout.tsx
 import './globals.css';
 import type { Metadata } from 'next';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Portable AI Vault',
@@ -42,15 +43,9 @@ export default function RootLayout({
               </button>
 
               <nav className="space-y-1 text-sm">
-                <button className="block w-full text-left text-neutral-700 hover:text-black">
-                  🧠 Personal
-                </button>
-                <button className="block w-full text-left text-neutral-700 hover:text-black">
-                  🚀 Founder OS
-                </button>
-                <button className="block w-full text-left text-neutral-700 hover:text-black">
-                  👥 Team Vault
-                </button>
+                <Link href="/memory/personal">🧠 Personal</Link>
+                <Link href="/memory/founder-os">🚀 Founder OS</Link>
+                <Link href="/memory/team-vault">👥 Team Vault</Link>
               </nav>
 
               <div className="mt-6 space-y-1 text-xs text-neutral-500">
