@@ -1,7 +1,7 @@
 // app/memory/[slug]/folder/[folder]/file/[filename]/page.tsx
 import Link from 'next/link';
-import { getFileContent } from '../../../../../lib/github';
-import CopyButton from '../../../../../components/CopyButton';
+import { getFileContent } from '@/lib/github';
+import CopyButton from '@/app/components/CopyButton';
 
 const friendlyFolderNames: Record<string, string> = {
   '01-identity': 'Identity',
