@@ -33,11 +33,11 @@ const memoryMeta: Record<string, { icon: string; title: string; description: str
 export default async function MemoryPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const meta = memoryMeta[params.slug] ?? {
+  const { slug } = await params;   const meta = memoryMeta[slug] ?? {
     icon: '📁',
-    title: params.slug,
+    title: slug,
     description: 'Your AI memory space.',
     recentFiles: [],
   };
@@ -74,7 +74,7 @@ export default async function MemoryPage({
                 className="flex items-center justify-between border-b border-neutral-100 last:border-none"
               >
                 <Link
-                  href={`/memory/${params.slug}/folder/${encodeURIComponent(f.name)}`}
+                  href={`/memory/${slug}/folder/${encodeURIComponent(f.name)}`}
                   className="flex flex-1 items-center gap-2 py-2 text-neutral-800 hover:text-black"
                 >
                   <span className="text-xs text-neutral-400">📁</span>
