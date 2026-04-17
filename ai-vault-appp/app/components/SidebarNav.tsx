@@ -9,12 +9,6 @@ const memories = [
   { href: '/memory/team-vault', icon: '👥', label: 'Team Vault' },
 ];
 
-const templates = [
-  { href: '/memory/personal', label: 'Personal' },
-  { href: '/memory/founder-os', label: 'Founder' },
-  { href: '/memory/team-vault', label: 'Team' },
-];
-
 export default function SidebarNav() {
   const pathname = usePathname();
 
@@ -32,7 +26,7 @@ export default function SidebarNav() {
 
       <nav className="space-y-0.5 text-sm">
         {memories.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           return (
             <Link
               key={item.href}
@@ -53,20 +47,31 @@ export default function SidebarNav() {
         })}
       </nav>
 
-      <div className="mt-6 space-y-0.5 text-xs text-neutral-500">
-        <div className="mb-1 font-semibold uppercase tracking-wide text-neutral-400">
-          Templates
-        </div>
-        {templates.map((t) => (
-          <Link
-            key={t.href}
-            href={t.href}
-            className="block w-full rounded-md px-2 py-1 transition-colors hover:bg-neutral-100 hover:text-black"
-          >
-            {t.label}
-          </Link>
-        ))}
+      {/* Divider */}
+      <div className="my-4 border-t border-neutral-100" />
+
+      {/* Tools */}
+      <div className="mb-2">
+        <span className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+          Tools
+        </span>
       </div>
+      <nav className="space-y-0.5 text-sm">
+        <Link
+          href="/search"
+          className={`flex items-center gap-2 w-full rounded-md px-2 py-1.5 transition-colors ${
+            pathname === '/search'
+              ? 'bg-neutral-100 text-black font-medium'
+              : 'text-neutral-600 hover:bg-neutral-100 hover:text-black'
+          }`}
+        >
+          <span>🔍</span>
+          <span>Search</span>
+          {pathname === '/search' && (
+            <span className="ml-auto h-1.5 w-1.5 rounded-full bg-black" />
+          )}
+        </Link>
+      </nav>
     </>
   );
 }
