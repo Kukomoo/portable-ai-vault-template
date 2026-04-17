@@ -1,6 +1,6 @@
 // app/memory/[slug]/folder/[folder]/page.tsx
 import Link from 'next/link';
-import { listDirectory } from '../../../../lib/github';
+import { listDirectory } from '@/lib/github';
 
 const friendlyFolderNames: Record<string, string> = {
   '01-identity': 'Identity',
