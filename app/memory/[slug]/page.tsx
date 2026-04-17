@@ -1,7 +1,6 @@
 // app/memory/[slug]/page.tsx
 import Link from 'next/link';
-import { listDirectory, type GithubContentItem } from '@/app/lib/github';
-
+import { listDirectory, type GithubContentItem } from '../../lib/github';
 const friendlyFolderNames: Record<string, string> = {
   '01-identity': 'Identity',
   '02-projects': 'Projects',
@@ -21,7 +20,10 @@ export default async function MemoryPage({
   params: { slug: string };
 }) {
   // Later: map slug → repo; for now, always use your template repo
-  const memoryItems = await listDirectory('memory');
+  const memoryItems = await listDirectory('memory') as Array<{
+  name: string;
+  type: 'file' | 'dir';
+    }>;
 
   const folders = memoryItems.filter((item) => item.type === 'dir');
 
