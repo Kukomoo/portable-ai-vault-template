@@ -43,9 +43,9 @@ export default function RootLayout({
               </button>
 
               <nav className="space-y-1 text-sm">
-                <Link href="/memory/personal">🧠 Personal</Link>
-                <Link href="/memory/founder-os">🚀 Founder OS</Link>
-                <Link href="/memory/team-vault">👥 Team Vault</Link>
+                <Link href="/memory/personal" className="block w-full py-1.5 text-neutral-700 hover:text-black">🧠 Personal</Link>
+                <Link href="/memory/founder-os" className="block w-full py-1.5 text-neutral-700 hover:text-black">🚀 Founder OS</Link>
+                <Link href="/memory/team-vault" className="block w-full py-1.5 text-neutral-700 hover:text-black">👥 Team Vault</Link>
               </nav>
 
               <div className="mt-6 space-y-1 text-xs text-neutral-500">
