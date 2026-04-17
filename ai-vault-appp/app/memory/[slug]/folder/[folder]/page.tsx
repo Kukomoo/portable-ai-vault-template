@@ -1,6 +1,7 @@
 // app/memory/[slug]/folder/[folder]/page.tsx
 import Link from 'next/link';
 import { listDirectory } from '@/lib/github';
+import FolderCopyButton from '@/app/components/FolderCopyButton';
 
 const friendlyFolderNames: Record<string, string> = {
   '01-identity': 'Identity',
@@ -18,8 +19,10 @@ export default async function FolderPage({
   const folderPath = `memory/${folder}`;
   const items = await listDirectory(folderPath);
   const files = items.filter((item) => item.type === 'file' && item.name.endsWith('.md'));
-
   const friendlyName = friendlyFolderNames[folder] ?? folder;
+
+  // Pass minimal file info to the client component
+  const fileList = files.map((f) => ({ name: f.name, path: f.path }));
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
@@ -38,7 +41,6 @@ export default async function FolderPage({
         <span>/</span>
         <span className="text-neutral-800 font-medium">{friendlyName}</span>
       </nav>
-
       {/* Header */}
       <header className="flex items-center justify-between">
         <div>
@@ -53,12 +55,9 @@ export default async function FolderPage({
           <button className="rounded-lg border border-[#e7e5e4] bg-white px-3 py-1.5 text-xs hover:bg-neutral-50 transition-colors">
             + New file
           </button>
-          <button className="rounded-lg border border-[#e7e5e4] bg-white px-3 py-1.5 text-xs hover:bg-neutral-50 transition-colors">
-            Copy for AI
-          </button>
+          <FolderCopyButton files={fileList} folderName={friendlyName} />
         </div>
       </header>
-
       {/* File list */}
       <section>
         <div className="rounded-2xl border border-[#e7e5e4] bg-white text-sm shadow-[0_1px_0_rgba(15,23,42,0.03)] overflow-hidden">
