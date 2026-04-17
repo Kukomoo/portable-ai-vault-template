@@ -1,7 +1,7 @@
 // app/memory/[slug]/page.tsx
 import Link from 'next/link';
 import { listDirectory, type GithubContentItem } from '../../lib/github';
-import { useState } from 'react';
+
 const friendlyFolderNames: Record<string, string> = {
   '01-identity': 'Identity',
   '02-projects': 'Projects',
