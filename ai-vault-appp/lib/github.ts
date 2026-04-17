@@ -10,6 +10,15 @@ export interface GitHubItem {
   size: number;
   html_url: string;
   download_url: string | null;
+  sha?: string;
+}
+
+export interface SearchResult {
+  name: string;
+  path: string;
+  html_url: string;
+  repository: { full_name: string };
+  text_matches?: { fragment: string }[];
 }
 
 const authHeaders = {
@@ -48,7 +57,7 @@ export async function getFileContent(path: string): Promise<string> {
     return Buffer.from(data.content.replace(/\n/g, ''), 'base64').toString('utf-8');
   }
 
-  // Case 2: file too large for contents API — use download_url
+  // Case 2: file too large for contents API - use download_url
   if (data.download_url) {
     const res = await fetch(data.download_url, {
       headers: authHeaders,
@@ -61,4 +70,45 @@ export async function getFileContent(path: string): Promise<string> {
   }
 
   throw new Error(`Could not decode file content for path: ${path}`);
+}
+
+export async function getFileSha(path: string): Promise<string> {
+  const data = await githubFetch(path);
+  return data.sha as string;
+}
+
+export async function updateFileContent(
+  path: string,
+  content: string,
+  sha: string,
+  message: string
+): Promise<void> {
+  const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
+  const encoded = Buffer.from(content, 'utf-8').toString('base64');
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: { ...authHeaders, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message, content: encoded, sha }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Failed to update file: ${err}`);
+  }
+}
+
+export async function searchFiles(query: string): Promise<SearchResult[]> {
+  const q = encodeURIComponent(`${query} repo:${REPO_OWNER}/${REPO_NAME} extension:md`);
+  const url = `https://api.github.com/search/code?q=${q}&per_page=30`;
+  const res = await fetch(url, {
+    headers: {
+      ...authHeaders,
+      Accept: 'application/vnd.github.v3.text-match+json',
+    },
+    next: { revalidate: 0 },
+  });
+  if (!res.ok) {
+    throw new Error(`Search API error: ${res.status}`);
+  }
+  const data = await res.json();
+  return data.items as SearchResult[];
 }
