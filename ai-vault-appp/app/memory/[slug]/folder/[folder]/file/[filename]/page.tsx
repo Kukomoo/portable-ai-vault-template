@@ -1,7 +1,7 @@
 // app/memory/[slug]/folder/[folder]/file/[filename]/page.tsx
 import Link from 'next/link';
 import { getFileContent } from '@/lib/github';
-import CopyButton from '@/app/components/CopyButton';
+import MarkdownEditor from '@/app/components/MarkdownEditor';
 
 const friendlyFolderNames: Record<string, string> = {
   '01-identity': 'Identity',
@@ -56,21 +56,23 @@ export default async function FilePage({
           <p className="text-xs text-neutral-500 mt-0.5">{decodedFilename}</p>
         </div>
         <div className="flex gap-2">
-          <CopyButton content={content} />
+          <Link
+            href={`https://github.com/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/blob/main/${filePath}`}
+            target="_blank"
+            className="rounded-lg border border-[#e7e5e4] bg-white px-3 py-1.5 text-xs hover:bg-neutral-50 transition-colors"
+          >
+            View on GitHub ↗
+          </Link>
         </div>
       </header>
 
-      {/* Content */}
-      <section>
-        <div className="rounded-2xl border border-[#e7e5e4] bg-white shadow-[0_1px_0_rgba(15,23,42,0.03)] overflow-hidden">
-          <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-2.5">
-            <span className="text-xs text-neutral-500 font-medium">Content</span>
-            <span className="text-xs text-neutral-400">.md</span>
-          </div>
-          <pre className="p-6 text-sm text-neutral-800 whitespace-pre-wrap font-mono leading-relaxed overflow-auto max-h-[70vh]">
-            {content}
-          </pre>
-        </div>
+      {/* Editor / Viewer */}
+      <section className="rounded-2xl border border-[#e7e5e4] bg-white shadow-[0_1px_0_rgba(15,23,42,0.03)] overflow-hidden">
+        <MarkdownEditor
+          initialContent={content}
+          filePath={filePath}
+          filename={decodedFilename}
+        />
       </section>
     </div>
   );
