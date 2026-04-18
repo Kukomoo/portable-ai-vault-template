@@ -41,6 +41,7 @@ export default async function FolderPage({
         <span>/</span>
         <span className="text-neutral-800 font-medium">{friendlyName}</span>
       </nav>
+
       {/* Header */}
       <header className="flex items-center justify-between">
         <div>
@@ -52,12 +53,14 @@ export default async function FolderPage({
           </p>
         </div>
         <div className="flex gap-2">
-          <button className="rounded-lg border border-[#e7e5e4] bg-white px-3 py-1.5 text-xs hover:bg-neutral-50 transition-colors">
-            + New file
+          <button className="inline-flex items-center gap-2 rounded-lg border border-[#e7e5e4] bg-white px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New file
           </button>
           <FolderCopyButton files={fileList} folderName={friendlyName} />
         </div>
       </header>
+
       {/* File list */}
       <section>
         <div className="rounded-2xl border border-[#e7e5e4] bg-white text-sm shadow-[0_1px_0_rgba(15,23,42,0.03)] overflow-hidden">
