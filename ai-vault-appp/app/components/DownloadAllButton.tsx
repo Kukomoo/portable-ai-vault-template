@@ -1,5 +1,9 @@
 'use client';
 import { useState } from 'react';
+import {
+  BTN_BASE, BTN_NEUTRAL, BTN_GREEN, BTN_RED,
+  IconCheck, IconCopy, IconDownload,
+} from '@/app/components/CopyButton';
 
 // The home-page "export everything" button.
 // Receives a list of vaults (name + slug), fetches all folders
@@ -142,7 +146,6 @@ export default function DownloadAllButton({ vaults }: DownloadAllButtonProps) {
         a.click();
         URL.revokeObjectURL(url);
       } else {
-        // Zip with vault/folder/file.md path structure
         const zipData = buildZip(
           allFiles.map((f) => ({
             name: `${f.vaultName}/${f.folderName}/${f.name.endsWith('.md') ? f.name : f.name + '.md'}`,
@@ -167,50 +170,36 @@ export default function DownloadAllButton({ vaults }: DownloadAllButtonProps) {
   }
 
   const copyLabel =
-    copyStatus === 'loading' ? 'Copying all...' :
-    copyStatus === 'done' ? 'Copied!' :
-    copyStatus === 'error' ? 'Error' :
+    copyStatus === 'loading' ? 'Copying all...'  :
+    copyStatus === 'done'    ? 'Copied!'          :
+    copyStatus === 'error'   ? 'Error'            :
     'Copy all data';
-
   const dlLabel =
-    dlStatus === 'loading' ? 'Zipping...' :
-    dlStatus === 'done' ? 'Downloaded!' :
-    dlStatus === 'error' ? 'Error' :
+    dlStatus === 'loading' ? 'Zipping...'    :
+    dlStatus === 'done'    ? 'Downloaded!'   :
+    dlStatus === 'error'   ? 'Error'         :
     'Download .zip';
-
-  const btnBase = 'inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors disabled:opacity-60';
-  const neutral = 'border-[#e7e5e4] bg-white text-neutral-700 hover:bg-neutral-50';
-  const green = 'border-green-300 bg-green-50 text-green-700';
-  const red = 'border-red-300 bg-red-50 text-red-700';
 
   return (
     <div className="flex gap-2">
       <button
         onClick={handleCopy}
         disabled={copyStatus === 'loading'}
-        className={`${btnBase} ${
-          copyStatus === 'done' ? green : copyStatus === 'error' ? red : neutral
+        className={`${BTN_BASE} ${
+          copyStatus === 'done' ? BTN_GREEN : copyStatus === 'error' ? BTN_RED : BTN_NEUTRAL
         }`}
       >
-        {copyStatus === 'done' ? (
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        ) : (
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        )}
+        {copyStatus === 'done' ? IconCheck : IconCopy}
         {copyLabel}
       </button>
       <button
         onClick={handleDownload}
         disabled={dlStatus === 'loading'}
-        className={`${btnBase} ${
-          dlStatus === 'done' ? green : dlStatus === 'error' ? red : neutral
+        className={`${BTN_BASE} ${
+          dlStatus === 'done' ? BTN_GREEN : dlStatus === 'error' ? BTN_RED : BTN_NEUTRAL
         }`}
       >
-        {dlStatus === 'done' ? (
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        ) : (
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        )}
+        {dlStatus === 'done' ? IconCheck : IconDownload}
         {dlLabel}
       </button>
     </div>
