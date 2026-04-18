@@ -11,6 +11,109 @@ const authHeaders = {
   'Content-Type': 'application/json',
 };
 
+function buildStarterTemplate(name: string, icon: string, description: string): string {
+  return [
+    `# ${icon} ${name}`,
+    '',
+    description ? `> ${description}` : `> Your AI memory space for ${name}.`,
+    '',
+    '---',
+    '',
+    '## 💡 What is this file?',
+    '',
+    'This is a **Markdown file** — a simple way to write formatted notes that any AI (ChatGPT, Claude, Gemini, etc.) can read and understand.',
+    '',
+    'You can copy the content of any file in this vault and paste it directly into an AI chat to give it context about you.',
+    '',
+    '---',
+    '',
+    '## ✏️ How to write in Markdown (it\'s easy!)',
+    '',
+    'Markdown just uses a few special characters to add formatting. Here are all the basics:',
+    '',
+    '### Headings',
+    '',
+    'Use `#` symbols to create titles. More `#` = smaller heading.',
+    '',
+    '```',
+    '# Big title',
+    '## Smaller title',
+    '### Even smaller',
+    '```',
+    '',
+    '### Bold and italic',
+    '',
+    '```',
+    '**This text is bold**',
+    '*This text is italic*',
+    '***This is both***',
+    '```',
+    '',
+    '**This text is bold**',
+    '*This text is italic*',
+    '',
+    '### Bullet lists',
+    '',
+    '```',
+    '- First item',
+    '- Second item',
+    '  - Indented sub-item',
+    '```',
+    '',
+    '- First item',
+    '- Second item',
+    '  - Indented sub-item',
+    '',
+    '### Numbered lists',
+    '',
+    '```',
+    '1. Step one',
+    '2. Step two',
+    '3. Step three',
+    '```',
+    '',
+    '1. Step one',
+    '2. Step two',
+    '3. Step three',
+    '',
+    '### Highlight (inline code)',
+    '',
+    'Wrap text in backticks to highlight it: `like this`',
+    '',
+    '### Divider line',
+    '',
+    'Three dashes on their own line creates a divider:',
+    '',
+    '```',
+    '---',
+    '```',
+    '',
+    '### Links',
+    '',
+    '```',
+    '[Link text](https://example.com)',
+    '```',
+    '',
+    '---',
+    '',
+    '## 🚀 Start adding your content below',
+    '',
+    `Write anything about **${name}** here. The more context you add, the more useful this memory becomes when pasted into an AI.`,
+    '',
+    '### My preferences',
+    '',
+    '- ',
+    '',
+    '### Important context',
+    '',
+    '- ',
+    '',
+    '### Notes',
+    '',
+    '- ',
+  ].join('\n');
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { name, icon, description } = await req.json();
@@ -19,7 +122,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing name' }, { status: 400 });
     }
 
-    // Convert name to a valid repo slug
     const repoName = name
       .trim()
       .toLowerCase()
@@ -30,7 +132,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid name' }, { status: 400 });
     }
 
-    // 1. Create the repo
+    // 1. Create the repo (auto_init creates a default README we'll replace)
     const createRes = await fetch('https://api.github.com/user/repos', {
       method: 'POST',
       headers: authHeaders,
@@ -38,13 +140,12 @@ export async function POST(req: NextRequest) {
         name: repoName,
         description: `${icon} ${description || name}`,
         private: false,
-        auto_init: true, // creates a default README
+        auto_init: true,
       }),
     });
 
     if (!createRes.ok) {
       const err = await createRes.json();
-      // 422 = repo already exists
       if (createRes.status === 422) {
         return NextResponse.json({ error: 'A memory with that name already exists.' }, { status: 409 });
       }
@@ -53,7 +154,7 @@ export async function POST(req: NextRequest) {
 
     const repo = await createRes.json() as { name: string; full_name: string };
 
-    // 2. Add the ai-memory-vault topic so the app can find it
+    // 2. Tag it as an ai-memory-vault
     await fetch(
       `https://api.github.com/repos/${repo.full_name}/topics`,
       {
@@ -63,34 +164,46 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    // 3. Overwrite the README with a proper vault template
-    // First get the SHA of the auto-generated README
+    // 3. Get the SHA of the auto-generated README so we can replace it
     const readmeRes = await fetch(
       `https://api.github.com/repos/${repo.full_name}/contents/README.md`,
       { headers: authHeaders, cache: 'no-store' }
     );
     const readmeData = await readmeRes.json() as { sha: string };
 
-    const readmeContent = [
-      `# ${icon} ${name}`,
-      '',
-      description || `An AI memory vault for ${name}.`,
-      '',
-      '## How to use',
-      '',
-      'Add Markdown files to this repo. Each file becomes a piece of context you can copy into any AI conversation.',
+    // 4. Replace README.md with a minimal internal metadata file (hidden from UI)
+    const metaContent = [
+      `vault_name: ${name}`,
+      `vault_icon: ${icon}`,
+      `vault_description: ${description || ''}`,
     ].join('\n');
+    const metaEncoded = Buffer.from(metaContent, 'utf-8').toString('base64');
 
-    const encoded = Buffer.from(readmeContent, 'utf-8').toString('base64');
     await fetch(
       `https://api.github.com/repos/${repo.full_name}/contents/README.md`,
       {
         method: 'PUT',
         headers: authHeaders,
         body: JSON.stringify({
-          message: `Init ${name} memory vault`,
-          content: encoded,
+          message: `Init ${name} vault`,
+          content: metaEncoded,
           sha: readmeData.sha,
+        }),
+      }
+    );
+
+    // 5. Create the starter file with the friendly Markdown template
+    const starterContent = buildStarterTemplate(name, icon, description || '');
+    const starterEncoded = Buffer.from(starterContent, 'utf-8').toString('base64');
+
+    await fetch(
+      `https://api.github.com/repos/${repo.full_name}/contents/getting-started.md`,
+      {
+        method: 'PUT',
+        headers: authHeaders,
+        body: JSON.stringify({
+          message: `Add getting started guide for ${name}`,
+          content: starterEncoded,
         }),
       }
     );
