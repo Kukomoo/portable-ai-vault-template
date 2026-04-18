@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getFileContent } from '@/lib/github';
 import MarkdownRenderer from '@/app/components/MarkdownRenderer';
 import CopyButton from '@/app/components/CopyButton';
+import EditButton from '@/app/components/EditButton'; // ← ADD THIS
 
 const friendlyFolderNames: Record<string, string> = {
   '01-identity': 'Identity',
@@ -17,16 +18,7 @@ export default async function FileViewerPage({
   params: Promise<{ slug: string; file: string }>;
 }) {
   const { slug, file } = await params;
-
-  // The file param is encoded and may be:
-  // - "getting-started.md" (root-level file, from vault index page)
-  // - "01-identity%2Fabout-me.md" (folder/file, from folder page using file.name only)
-  // - "about-me.md" (just a filename, from folder page)
-  // slug is the vault repo name — we must pass it to getFileContent
   const decodedFile = decodeURIComponent(file);
-
-  // Use the decoded path directly — it's relative to the repo root in the vault
-  // e.g. "getting-started.md" or "01-identity/about-me.md"
   const filePath = decodedFile;
 
   let content = '';
@@ -38,7 +30,6 @@ export default async function FileViewerPage({
     console.error(e);
   }
 
-  // Derive display info
   const parts = decodedFile.split('/');
   const fileName = parts[parts.length - 1];
   const folderName = parts.length > 1 ? (friendlyFolderNames[parts[0]] ?? parts[0]) : '';
@@ -49,10 +40,7 @@ export default async function FileViewerPage({
       <header className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center gap-1.5 text-xs text-neutral-400">
-            <Link
-              href={`/memory/${slug}`}
-              className="hover:text-neutral-700"
-            >
+            <Link href={`/memory/${slug}`} className="hover:text-neutral-700">
               {slug}
             </Link>
             {folderName && (
@@ -66,7 +54,11 @@ export default async function FileViewerPage({
             {displayTitle}
           </h1>
         </div>
-        <CopyButton content={content} filename={fileName} />
+        {/* ← ADD EditButton next to CopyButton */}
+        <div className="flex items-center gap-2">
+          <EditButton filePath={filePath} repo={slug} initialContent={content} />
+          <CopyButton content={content} filename={fileName} />
+        </div>
       </header>
       <div className="rounded-2xl border border-[#e7e5e4] bg-white p-5 shadow-[0_1px_0_rgba(15,23,42,0.03)]">
         {error ? (
