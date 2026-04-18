@@ -27,30 +27,29 @@ const authHeaders = {
   'X-GitHub-Api-Version': '2022-11-28',
 };
 
-async function githubFetch(path: string) {
-  const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
+// repo defaults to REPO_NAME env var; pass an explicit repo to target a different vault
+async function githubFetch(path: string, repo: string = REPO_NAME ?? '') {
+  const url = `https://api.github.com/repos/${REPO_OWNER}/${repo}/contents/${path}`;
   const res = await fetch(url, {
     headers: authHeaders,
     next: { revalidate: 60 },
   });
-
   if (!res.ok) {
     throw new Error(`GitHub API error: ${res.status} for path: ${path}`);
   }
-
   return res.json();
 }
 
-export async function listDirectory(path: string): Promise<GitHubItem[]> {
-  const data = await githubFetch(path);
+export async function listDirectory(path: string, repo?: string): Promise<GitHubItem[]> {
+  const data = await githubFetch(path, repo);
   if (!Array.isArray(data)) {
     throw new Error(`Expected directory listing for path: ${path}`);
   }
   return data as GitHubItem[];
 }
 
-export async function getFileContent(path: string): Promise<string> {
-  const data = await githubFetch(path);
+export async function getFileContent(path: string, repo?: string): Promise<string> {
+  const data = await githubFetch(path, repo);
   // Case 1: content is present and base64 encoded (files < 1MB)
   if (data.encoding === 'base64' && data.content) {
     return Buffer.from(data.content.replace(/\n/g, ''), 'base64').toString('utf-8');
@@ -69,8 +68,8 @@ export async function getFileContent(path: string): Promise<string> {
   throw new Error(`Could not decode file content for path: ${path}`);
 }
 
-export async function getFileSha(path: string): Promise<string> {
-  const data = await githubFetch(path);
+export async function getFileSha(path: string, repo?: string): Promise<string> {
+  const data = await githubFetch(path, repo);
   return data.sha as string;
 }
 
@@ -78,9 +77,11 @@ export async function updateFileContent(
   path: string,
   content: string,
   sha: string,
-  message: string
+  message: string,
+  repo?: string
 ): Promise<void> {
-  const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
+  const repoName = repo ?? REPO_NAME ?? '';
+  const url = `https://api.github.com/repos/${REPO_OWNER}/${repoName}/contents/${path}`;
   const encoded = Buffer.from(content, 'utf-8').toString('base64');
   const res = await fetch(url, {
     method: 'PUT',
@@ -96,9 +97,11 @@ export async function updateFileContent(
 export async function createFile(
   path: string,
   content: string,
-  message: string
+  message: string,
+  repo?: string
 ): Promise<void> {
-  const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
+  const repoName = repo ?? REPO_NAME ?? '';
+  const url = `https://api.github.com/repos/${REPO_OWNER}/${repoName}/contents/${path}`;
   const encoded = Buffer.from(content, 'utf-8').toString('base64');
   const res = await fetch(url, {
     method: 'PUT',
