@@ -1,7 +1,8 @@
 'use client';
-
+// app/components/SidebarNav.tsx
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import NewMemoryButton from '@/app/components/NewMemoryButton';
 
 const memories = [
   { href: '/memory/personal', icon: '🧠', label: 'Personal' },
@@ -20,9 +21,7 @@ export default function SidebarNav() {
         </span>
       </div>
 
-      <button className="mb-4 w-full rounded-lg border border-[#e7e5e4] bg-white px-3 py-2 text-left text-xs font-medium text-neutral-900 hover:bg-neutral-50 transition-colors">
-        + New AI Memory
-      </button>
+      <NewMemoryButton variant="sidebar" />
 
       <nav className="space-y-0.5 text-sm">
         {memories.map((item) => {
@@ -48,7 +47,7 @@ export default function SidebarNav() {
       </nav>
 
       {/* Divider */}
-      <div className="my-4 border-t border-neutral-100" />
+      <div className="my-4 border-t border-[#e7e5e4]" />
 
       {/* Tools */}
       <div className="mb-2">
