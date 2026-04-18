@@ -18,24 +18,21 @@ export default async function FileViewerPage({
 }) {
   const { slug, file } = await params;
 
-  // The file param may be encoded like "01-identity%2Fabout-me.md"
-  // or just "about-me.md" — we need to figure out which folder it belongs to
-  // Convention: path stored as "folderName/filename.md" encoded in the URL
+  // The file param is encoded and may be:
+  // - "getting-started.md" (root-level file, from vault index page)
+  // - "01-identity%2Fabout-me.md" (folder/file, from folder page using file.name only)
+  // - "about-me.md" (just a filename, from folder page)
+  // slug is the vault repo name — we must pass it to getFileContent
   const decodedFile = decodeURIComponent(file);
 
-  // decodedFile could be "01-identity/about-me.md" or just "about-me.md"
-  // We store full relative path from memory root in the file param
-  let filePath: string;
-  if (decodedFile.includes('/')) {
-    filePath = `memory/${decodedFile}`;
-  } else {
-    filePath = `memory/${decodedFile}`;
-  }
+  // Use the decoded path directly — it's relative to the repo root in the vault
+  // e.g. "getting-started.md" or "01-identity/about-me.md"
+  const filePath = decodedFile;
 
   let content = '';
   let error = '';
   try {
-    content = await getFileContent(filePath);
+    content = await getFileContent(filePath, slug);
   } catch (e) {
     error = 'Could not load file content.';
     console.error(e);
