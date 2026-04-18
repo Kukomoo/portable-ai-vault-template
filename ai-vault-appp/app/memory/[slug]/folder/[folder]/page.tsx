@@ -21,7 +21,6 @@ export default async function FolderPage({
   const items = await listDirectory(folderPath);
   const files = items.filter((item) => item.type === 'file' && item.name.endsWith('.md'));
   const friendlyName = friendlyFolderNames[folder] ?? folder;
-
   const fileList = files.map((f) => ({ name: f.name, path: f.path }));
 
   return (
@@ -54,7 +53,7 @@ export default async function FolderPage({
         </div>
         <div className="flex items-center gap-2">
           <NewFileButton folderPath={folderPath} slug={slug} folder={folder} />
-          <FolderCopyButton files={fileList} folderName={friendlyName} />
+          <FolderCopyButton files={fileList} folderName={friendlyName} slug={slug} />
         </div>
       </header>
 
