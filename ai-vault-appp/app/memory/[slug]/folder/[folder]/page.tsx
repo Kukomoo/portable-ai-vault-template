@@ -22,7 +22,6 @@ export default async function FolderPage({
   const files = items.filter((item) => item.type === 'file' && item.name.endsWith('.md'));
   const friendlyName = friendlyFolderNames[folder] ?? folder;
 
-  // Pass minimal file info to the client component
   const fileList = files.map((f) => ({ name: f.name, path: f.path }));
 
   return (
@@ -68,10 +67,11 @@ export default async function FolderPage({
         ) : (
           <ul className="flex flex-col gap-1">
             {files.map((file) => (
-              <li key={file.path}>
+              <li key={file.path} className="relative">
+                {/* Main clickable card */}
                 <Link
                   href={`/memory/${slug}/folder/${folder}/file/${encodeURIComponent(file.name)}`}
-                  className="flex items-center justify-between rounded-xl border border-[#e7e5e4] bg-white px-4 py-3 hover:bg-neutral-50 transition-colors group"
+                  className="flex items-center justify-between rounded-xl border border-[#e7e5e4] bg-white px-4 py-3 hover:bg-neutral-50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-base">📄</span>
@@ -84,17 +84,19 @@ export default async function FolderPage({
                   </div>
                   <div className="flex items-center gap-3 text-xs text-neutral-400">
                     <span>{(file.size / 1024).toFixed(1)} KB</span>
-                    <a
-                      href={file.html_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:text-neutral-700 transition-colors"
-                      onClick={e => e.stopPropagation()}
-                    >
-                      GitHub ↗
-                    </a>
+                    {/* Spacer so the absolute GitHub link has room */}
+                    <span className="w-16" />
                   </div>
                 </Link>
+                {/* GitHub link sits on top of the card — no onClick needed */}
+                <a
+                  href={file.html_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-neutral-400 hover:text-neutral-700 transition-colors z-10"
+                >
+                  GitHub ↗
+                </a>
               </li>
             ))}
           </ul>
