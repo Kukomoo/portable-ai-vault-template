@@ -18,7 +18,7 @@ export default async function FolderPage({
 }) {
   const { slug, folder } = await params;
   const folderPath = `memory/${folder}`;
-  const items = await listDirectory(folderPath);
+  const items = await listDirectory(folderPath, slug);
   const files = items.filter((item) => item.type === 'file' && item.name.endsWith('.md'));
   const friendlyName = friendlyFolderNames[folder] ?? folder;
   const fileList = files.map((f) => ({ name: f.name, path: f.path }));
@@ -67,9 +67,9 @@ export default async function FolderPage({
           <ul className="flex flex-col gap-1">
             {files.map((file) => (
               <li key={file.path} className="relative">
-                {/* Main clickable card */}
+                {/* Main clickable card — uses full file.path so [file]/page.tsx gets the right path */}
                 <Link
-                  href={`/memory/${slug}/folder/${folder}/file/${encodeURIComponent(file.name)}`}
+                  href={`/memory/${slug}/file/${encodeURIComponent(file.path)}`}
                   className="flex items-center justify-between rounded-xl border border-[#e7e5e4] bg-white px-4 py-3 hover:bg-neutral-50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
