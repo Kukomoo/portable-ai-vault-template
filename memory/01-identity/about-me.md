@@ -1,4 +1,4 @@
-# About Me
+# About Me!
 
 **Name:** Alex Rivera  
 **Role:** Full-stack developer & indie hacker  
