@@ -1,6 +1,7 @@
 // app/page.tsx
 import Link from 'next/link';
 import DownloadAllButton from '@/app/components/DownloadAllButton';
+import NewMemoryButton from '@/app/components/NewMemoryButton';
 
 const memories = [
   {
@@ -33,9 +34,7 @@ export default function HomePage() {
           <h1 className="text-2xl font-semibold tracking-tight">
             Welcome back
           </h1>
-          <button className="rounded-lg border border-[#e7e5e4] bg-white px-3 py-2 text-xs font-medium text-neutral-900 hover:bg-neutral-50">
-            + New AI Memory
-          </button>
+          <NewMemoryButton variant="home" />
         </div>
         <p className="text-sm text-neutral-600">
           Create simple spaces that store the important things you repeat to AI:
@@ -50,14 +49,12 @@ export default function HomePage() {
             <Link
               key={m.slug}
               href={`/memory/${m.slug}`}
-              className="flex flex-col justify-between rounded-2xl border border-[#e7e5e4] bg-white px-4 py-4 text-sm shadow-[0_1px_0_rgba(15,23,42,0.03)] hover:border-neutral-300 transition-colors"
+              className="flex flex-col gap-2 rounded-2xl border border-[#e7e5e4] bg-white p-5 hover:bg-neutral-50 transition-colors shadow-sm"
             >
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{m.icon}</span>
-                  <span className="font-medium">{m.name}</span>
-                </div>
-                <p className="text-xs text-neutral-600">{m.description}</p>
+              <span className="text-2xl">{m.icon}</span>
+              <div>
+                <div className="font-medium text-neutral-900">{m.name}</div>
+                <div className="text-xs text-neutral-500 mt-0.5">{m.description}</div>
               </div>
             </Link>
           ))}
@@ -65,15 +62,11 @@ export default function HomePage() {
       </section>
 
       <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-sm font-semibold text-neutral-800">Export all data</h2>
-            <p className="text-xs text-neutral-500 mt-0.5">
-              Copy or download your entire AI vault as a single Markdown file.
-            </p>
-          </div>
-          <DownloadAllButton vaults={vaultList} />
-        </div>
+        <h2 className="text-sm font-semibold text-neutral-800">Export all data</h2>
+        <p className="text-sm text-neutral-600">
+          Copy or download your entire AI vault as a single Markdown file.
+        </p>
+        <DownloadAllButton vaultList={vaultList} />
       </section>
     </div>
   );
