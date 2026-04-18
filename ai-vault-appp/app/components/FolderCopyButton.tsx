@@ -1,5 +1,4 @@
 'use client';
-
 import { useState } from 'react';
 
 interface FileItem {
@@ -12,60 +11,99 @@ interface FolderCopyButtonProps {
   folderName: string;
 }
 
+async function buildFolderContent(
+  files: FileItem[],
+  folderName: string
+): Promise<string> {
+  const results = await Promise.all(
+    files.map(async (file) => {
+      const res = await fetch(`/api/file-content?path=${encodeURIComponent(file.path)}`);
+      if (!res.ok) throw new Error(`Failed to fetch ${file.name}`);
+      const { content } = await res.json();
+      return { name: file.name, content };
+    })
+  );
+  const combined = results
+    .map((f) => `## ${f.name.replace(/\.md$/i, '')}\n\n${f.content}`)
+    .join('\n\n---\n\n');
+  return `# ${folderName} — Full Context\n\n${combined}`;
+}
+
 export default function FolderCopyButton({ files, folderName }: FolderCopyButtonProps) {
-  const [status, setStatus] = useState<'idle' | 'loading' | 'copied' | 'error'>('idle');
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const [dlStatus, setDlStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
 
-  async function handleCopyForAI() {
-    setStatus('loading');
+  async function handleCopy() {
+    setCopyStatus('loading');
     try {
-      // Fetch all file contents in parallel
-      const results = await Promise.all(
-        files.map(async (file) => {
-          const res = await fetch(`/api/file-content?path=${encodeURIComponent(file.path)}`);
-          if (!res.ok) throw new Error(`Failed to fetch ${file.name}`);
-          const { content } = await res.json();
-          return { name: file.name, content };
-        })
-      );
-
-      // Concatenate with filename headers
-      const combined = results
-        .map((f) => `## ${f.name.replace('.md', '')}\n\n${f.content}`)
-        .join('\n\n---\n\n');
-
-      const preamble = `# ${folderName} — Full Context\n\n`;
-      await navigator.clipboard.writeText(preamble + combined);
-      setStatus('copied');
-      setTimeout(() => setStatus('idle'), 2000);
+      const text = await buildFolderContent(files, folderName);
+      await navigator.clipboard.writeText(text);
+      setCopyStatus('done');
+      setTimeout(() => setCopyStatus('idle'), 2500);
     } catch (err) {
       console.error(err);
-      setStatus('error');
-      setTimeout(() => setStatus('idle'), 2000);
+      setCopyStatus('error');
+      setTimeout(() => setCopyStatus('idle'), 3000);
     }
   }
 
-  const label =
-    status === 'loading'
-      ? 'Loading...'
-      : status === 'copied'
-      ? '✓ Copied!'
-      : status === 'error'
-      ? 'Error'
-      : 'Copy for AI';
+  async function handleDownload() {
+    setDlStatus('loading');
+    try {
+      const text = await buildFolderContent(files, folderName);
+      const blob = new Blob([text], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${folderName.toLowerCase().replace(/\s+/g, '-')}.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setDlStatus('done');
+      setTimeout(() => setDlStatus('idle'), 2500);
+    } catch (err) {
+      console.error(err);
+      setDlStatus('error');
+      setTimeout(() => setDlStatus('idle'), 3000);
+    }
+  }
+
+  const copyLabel =
+    copyStatus === 'loading' ? 'Copying...' :
+    copyStatus === 'done' ? '\u2713 Copied!' :
+    copyStatus === 'error' ? 'Error' :
+    'Copy for AI';
+
+  const dlLabel =
+    dlStatus === 'loading' ? 'Downloading...' :
+    dlStatus === 'done' ? '\u2713 Downloaded' :
+    dlStatus === 'error' ? 'Error' :
+    '\u2913 Download';
+
+  const btnBase = 'rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-60';
+  const neutral = 'border-[#e7e5e4] bg-white text-neutral-700 hover:bg-neutral-50';
+  const green = 'border-green-300 bg-green-50 text-green-700';
+  const red = 'border-red-300 bg-red-50 text-red-700';
 
   return (
-    <button
-      onClick={handleCopyForAI}
-      disabled={status === 'loading'}
-      className={`rounded-lg border px-3 py-1.5 text-xs transition-colors ${
-        status === 'copied'
-          ? 'border-green-300 bg-green-50 text-green-700'
-          : status === 'error'
-          ? 'border-red-300 bg-red-50 text-red-700'
-          : 'border-[#e7e5e4] bg-white hover:bg-neutral-50'
-      }`}
-    >
-      {label}
-    </button>
+    <div className="flex gap-2">
+      <button
+        onClick={handleCopy}
+        disabled={copyStatus === 'loading'}
+        className={`${btnBase} ${
+          copyStatus === 'done' ? green : copyStatus === 'error' ? red : neutral
+        }`}
+      >
+        {copyLabel}
+      </button>
+      <button
+        onClick={handleDownload}
+        disabled={dlStatus === 'loading'}
+        className={`${btnBase} ${
+          dlStatus === 'done' ? green : dlStatus === 'error' ? red : neutral
+        }`}
+      >
+        {dlLabel}
+      </button>
+    </div>
   );
 }
