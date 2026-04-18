@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { listDirectory } from '@/lib/github';
 import FolderCopyButton from '@/app/components/FolderCopyButton';
+import { BTN_BASE, BTN_NEUTRAL, IconPlus } from '@/app/components/CopyButton';
 
 const friendlyFolderNames: Record<string, string> = {
   '01-identity': 'Identity',
@@ -53,10 +54,13 @@ export default async function FolderPage({
           </p>
         </div>
         <div className="flex gap-2">
-          <button className="inline-flex items-center gap-2 rounded-lg border border-[#e7e5e4] bg-white px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <Link
+            href={`/memory/${slug}/folder/${folder}/new`}
+            className={`${BTN_BASE} ${BTN_NEUTRAL}`}
+          >
+            {IconPlus}
             New file
-          </button>
+          </Link>
           <FolderCopyButton files={fileList} folderName={friendlyName} />
         </div>
       </header>
