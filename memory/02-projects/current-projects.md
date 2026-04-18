@@ -1,5 +1,5 @@
 # Current Projects
-
+Nada was here
 ## 1. Portable AI Vault ← (this thing!)
 
 **Status:** Active — building v1  
