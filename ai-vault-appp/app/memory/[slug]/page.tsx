@@ -9,24 +9,21 @@ const friendlyFolderNames: Record<string, string> = {
   '04-prompts': 'Prompts',
 };
 
-const memoryMeta: Record<string, { icon: string; title: string; description: string; recentFiles: string[] }> = {
+const memoryMeta: Record<string, { icon: string; title: string; description: string }> = {
   personal: {
     icon: '🧠',
     title: 'Personal',
     description: 'Your reusable personal AI memory — preferences, identity, and saved prompts.',
-    recentFiles: ['about-me.md', 'preferences.md', 'reusable-prompts.md'],
   },
   'founder-os': {
     icon: '🚀',
     title: 'Founder OS',
     description: 'Company context, product strategy, ICP, and hiring policies.',
-    recentFiles: ['company-context.md', 'offer-positioning.md', 'hiring-ai-policy.md'],
   },
   'team-vault': {
     icon: '👥',
     title: 'Team Vault',
     description: 'Shared knowledge, working agreements, and client context for small teams.',
-    recentFiles: ['team-overview.md', 'working-agreements.md', 'client-playbook.md'],
   },
 };
 
@@ -40,7 +37,6 @@ export default async function MemoryPage({
     icon: '📁',
     title: slug,
     description: 'Your AI memory space.',
-    recentFiles: [],
   };
 
   const memoryItems = await listDirectory('memory');
@@ -75,19 +71,6 @@ export default async function MemoryPage({
                 <span className="text-[11px] uppercase tracking-wide text-neutral-400">
                   folder
                 </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-neutral-800">Recent files</h2>
-        <div className="rounded-2xl border border-[#e7e5e4] bg-white px-4 py-3 text-sm shadow-[0_1px_0_rgba(15,23,42,0.03)]">
-          <ul className="space-y-1.5">
-            {meta.recentFiles.map((name) => (
-              <li key={name} className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-neutral-300" />
-                <span>{name}</span>
               </li>
             ))}
           </ul>
