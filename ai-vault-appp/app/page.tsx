@@ -1,32 +1,31 @@
 // app/page.tsx
-const mockMemories = [
+import Link from 'next/link';
+import DownloadAllButton from '@/app/components/DownloadAllButton';
+
+const memories = [
   {
     icon: '🧠',
     name: 'Personal',
+    slug: 'personal',
     description: 'My reusable personal AI memory',
-    files: 12,
   },
   {
     icon: '🚀',
     name: 'Founder OS',
+    slug: 'founder-os',
     description: 'Company context and projects',
-    files: 18,
   },
   {
     icon: '👥',
     name: 'Team Vault',
+    slug: 'team-vault',
     description: 'Shared context for a small team',
-    files: 9,
   },
 ];
 
-const recentFiles = [
-  'Writing style',
-  'Company context',
-  'Hiring AI policy',
-];
-
 export default function HomePage() {
+  const vaultList = memories.map((m) => ({ name: m.name, slug: m.slug }));
+
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-8">
       <section className="space-y-4">
@@ -47,10 +46,11 @@ export default function HomePage() {
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-neutral-800">Your spaces</h2>
         <div className="grid gap-4 md:grid-cols-3">
-          {mockMemories.map((m) => (
-            <div
-              key={m.name}
-              className="flex flex-col justify-between rounded-2xl border border-[#e7e5e4] bg-white px-4 py-4 text-sm shadow-[0_1px_0_rgba(15,23,42,0.03)]"
+          {memories.map((m) => (
+            <Link
+              key={m.slug}
+              href={`/memory/${m.slug}`}
+              className="flex flex-col justify-between rounded-2xl border border-[#e7e5e4] bg-white px-4 py-4 text-sm shadow-[0_1px_0_rgba(15,23,42,0.03)] hover:border-neutral-300 transition-colors"
             >
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
@@ -59,27 +59,20 @@ export default function HomePage() {
                 </div>
                 <p className="text-xs text-neutral-600">{m.description}</p>
               </div>
-              <div className="mt-4 text-[11px] uppercase tracking-wide text-neutral-400">
-                {m.files} files
-              </div>
-            </div>
+            </Link>
           ))}
         </div>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-neutral-800">
-          Recent files
-        </h2>
-        <div className="rounded-2xl border border-[#e7e5e4] bg-white px-4 py-3 text-sm shadow-[0_1px_0_rgba(15,23,42,0.03)]">
-          <ul className="space-y-1.5">
-            {recentFiles.map((name) => (
-              <li key={name} className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-neutral-300" />
-                <span>{name}</span>
-              </li>
-            ))}
-          </ul>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-neutral-800">Export all data</h2>
+            <p className="text-xs text-neutral-500 mt-0.5">
+              Copy or download your entire AI vault as a single Markdown file.
+            </p>
+          </div>
+          <DownloadAllButton vaults={vaultList} />
         </div>
       </section>
     </div>
