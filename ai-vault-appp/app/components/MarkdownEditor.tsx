@@ -109,7 +109,13 @@ export default function MarkdownEditor({ initialContent, filePath, filename }: M
                     : 'bg-neutral-900 text-white hover:bg-neutral-700'
                 }`}
               >
-                {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? '✓ Saved' : saveStatus === 'error' ? 'Error' : 'Save & Commit'}
+                {saveStatus === 'saving'
+                  ? 'Saving...'
+                  : saveStatus === 'saved'
+                  ? '\u2713 Saved'
+                  : saveStatus === 'error'
+                  ? 'Error'
+                  : 'Save & Commit'}
               </button>
             </>
           )}
