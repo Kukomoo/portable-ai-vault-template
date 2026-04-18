@@ -35,7 +35,8 @@ export default async function MemoryPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;   const meta = memoryMeta[slug] ?? {
+  const { slug } = await params;
+  const meta = memoryMeta[slug] ?? {
     icon: '📁',
     title: slug,
     description: 'Your AI memory space.',
@@ -54,16 +55,7 @@ export default async function MemoryPage({
           </h1>
           <p className="text-xs text-neutral-600">{meta.description}</p>
         </div>
-        <div className="flex gap-2">
-          <button className="rounded-lg border border-[#e7e5e4] bg-white px-3 py-1.5 text-xs hover:bg-neutral-50">
-            Paste from chat
-          </button>
-          <button className="rounded-lg border border-[#e7e5e4] bg-white px-3 py-1.5 text-xs hover:bg-neutral-50">
-            Copy for AI
-          </button>
-        </div>
       </header>
-
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-neutral-800">Folders</h2>
         <div className="rounded-2xl border border-[#e7e5e4] bg-white p-3 text-sm shadow-[0_1px_0_rgba(15,23,42,0.03)]">
@@ -88,7 +80,6 @@ export default async function MemoryPage({
           </ul>
         </div>
       </section>
-
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-neutral-800">Recent files</h2>
         <div className="rounded-2xl border border-[#e7e5e4] bg-white px-4 py-3 text-sm shadow-[0_1px_0_rgba(15,23,42,0.03)]">
