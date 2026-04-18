@@ -83,6 +83,14 @@ export async function getFile(path: string): Promise<GithubFileContent> {
   return githubFetch<GithubFileContent>(apiPath);
 }
 
+/** Returns the decoded text content of a file. */
+export async function getFileContent(path: string): Promise<string> {
+  const file = await getFile(path);
+  // GitHub returns base64 with newlines; strip them before decoding
+  const cleaned = file.content.replace(/\n/g, '');
+  return decodeURIComponent(escape(atob(cleaned)));
+}
+
 export async function getFileSha(path: string): Promise<string> {
   const file = await getFile(path);
   return file.sha;
