@@ -11,22 +11,21 @@ interface FolderCopyButtonProps {
   folderName: string;
 }
 
-async function buildFolderContent(
-  files: FileItem[],
-  folderName: string
-): Promise<string> {
-  const results = await Promise.all(
-    files.map(async (file) => {
-      const res = await fetch(`/api/file-content?path=${encodeURIComponent(file.path)}`);
-      if (!res.ok) throw new Error(`Failed to fetch ${file.name}`);
-      const { content } = await res.json();
-      return { name: file.name, content };
-    })
-  );
-  const combined = results
-    .map((f) => `## ${f.name.replace(/\.md$/i, '')}\n\n${f.content}`)
-    .join('\n\n---\n\n');
-  return `# ${folderName} — Full Context\n\n${combined}`;
+async function fetchFileContent(file: FileItem): Promise<{ name: string; content: string }> {
+  const res = await fetch(`/api/file-content?path=${encodeURIComponent(file.path)}`);
+  if (!res.ok) throw new Error(`Failed to fetch ${file.name}`);
+  const { content } = await res.json();
+  return { name: file.name, content };
+}
+
+function triggerDownload(filename: string, content: string) {
+  const blob = new Blob([content], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export default function FolderCopyButton({ files, folderName }: FolderCopyButtonProps) {
@@ -36,7 +35,11 @@ export default function FolderCopyButton({ files, folderName }: FolderCopyButton
   async function handleCopy() {
     setCopyStatus('loading');
     try {
-      const text = await buildFolderContent(files, folderName);
+      const results = await Promise.all(files.map(fetchFileContent));
+      const combined = results
+        .map((f) => `## ${f.name.replace(/\.md$/i, '')}\n\n${f.content}`)
+        .join('\n\n---\n\n');
+      const text = `# ${folderName} \u2014 Full Context\n\n${combined}`;
       await navigator.clipboard.writeText(text);
       setCopyStatus('done');
       setTimeout(() => setCopyStatus('idle'), 2500);
@@ -50,14 +53,13 @@ export default function FolderCopyButton({ files, folderName }: FolderCopyButton
   async function handleDownload() {
     setDlStatus('loading');
     try {
-      const text = await buildFolderContent(files, folderName);
-      const blob = new Blob([text], { type: 'text/markdown' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${folderName.toLowerCase().replace(/\s+/g, '-')}.md`;
-      a.click();
-      URL.revokeObjectURL(url);
+      // Download each file individually with a small delay between each
+      for (const file of files) {
+        const { content } = await fetchFileContent(file);
+        triggerDownload(file.name, content);
+        // Small delay so the browser processes each download
+        await new Promise((r) => setTimeout(r, 300));
+      }
       setDlStatus('done');
       setTimeout(() => setDlStatus('idle'), 2500);
     } catch (err) {
@@ -71,13 +73,13 @@ export default function FolderCopyButton({ files, folderName }: FolderCopyButton
     copyStatus === 'loading' ? 'Copying...' :
     copyStatus === 'done' ? '\u2713 Copied!' :
     copyStatus === 'error' ? 'Error' :
-    'Copy for AI';
+    'Copy all';
 
   const dlLabel =
     dlStatus === 'loading' ? 'Downloading...' :
-    dlStatus === 'done' ? '\u2713 Downloaded' :
+    dlStatus === 'done' ? `\u2713 ${files.length} file${files.length !== 1 ? 's' : ''} saved` :
     dlStatus === 'error' ? 'Error' :
-    '\u2913 Download';
+    '\u2913 Download files';
 
   const btnBase = 'rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-60';
   const neutral = 'border-[#e7e5e4] bg-white text-neutral-700 hover:bg-neutral-50';
