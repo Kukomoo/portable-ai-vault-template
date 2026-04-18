@@ -175,10 +175,10 @@ export default function DownloadAllButton({ vaults }: DownloadAllButtonProps) {
     copyStatus === 'error'   ? 'Error'            :
     'Copy all data';
   const dlLabel =
-    dlStatus === 'loading' ? 'Zipping...'    :
-    dlStatus === 'done'    ? 'Downloaded!'   :
-    dlStatus === 'error'   ? 'Error'         :
-    'Download .zip';
+    dlStatus === 'loading' ? 'Downloading...'    :
+    dlStatus === 'done'    ? 'Downloaded!'        :
+    dlStatus === 'error'   ? 'Error'              :
+    'Download all data';
 
   return (
     <div className="flex gap-2">
