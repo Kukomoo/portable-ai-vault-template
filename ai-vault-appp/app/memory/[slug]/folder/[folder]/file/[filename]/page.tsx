@@ -24,7 +24,6 @@ export default async function FilePage({
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
-      {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-xs text-neutral-500">
         <Link href="/" className="hover:text-black transition-colors">
           Home
@@ -46,8 +45,6 @@ export default async function FilePage({
         <span>/</span>
         <span className="text-neutral-800 font-medium">{displayName}</span>
       </nav>
-
-      {/* Header */}
       <header className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">
@@ -55,18 +52,7 @@ export default async function FilePage({
           </h1>
           <p className="text-xs text-neutral-500 mt-0.5">{decodedFilename}</p>
         </div>
-        <div className="flex gap-2">
-          <Link
-            href={`https://github.com/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/blob/main/${filePath}`}
-            target="_blank"
-            className="rounded-lg border border-[#e7e5e4] bg-white px-3 py-1.5 text-xs hover:bg-neutral-50 transition-colors"
-          >
-            View on GitHub ↗
-          </Link>
-        </div>
       </header>
-
-      {/* Editor / Viewer */}
       <section className="rounded-2xl border border-[#e7e5e4] bg-white shadow-[0_1px_0_rgba(15,23,42,0.03)] overflow-hidden">
         <MarkdownEditor
           initialContent={content}
