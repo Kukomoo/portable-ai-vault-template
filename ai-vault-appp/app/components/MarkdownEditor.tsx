@@ -14,7 +14,6 @@ export default function MarkdownEditor({ initialContent, filePath, filename }: M
   const [content, setContent] = useState(initialContent);
   const [draft, setDraft] = useState(initialContent);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
-  const [commitMsg, setCommitMsg] = useState('');
 
   const handleEdit = useCallback(() => {
     setDraft(content);
@@ -35,7 +34,7 @@ export default function MarkdownEditor({ initialContent, filePath, filename }: M
         body: JSON.stringify({
           path: filePath,
           content: draft,
-          message: commitMsg || `Update ${filename}`,
+          message: `Update ${filename}`,
         }),
       });
       if (!res.ok) {
@@ -45,14 +44,13 @@ export default function MarkdownEditor({ initialContent, filePath, filename }: M
       setContent(draft);
       setSaveStatus('saved');
       setMode('view');
-      setCommitMsg('');
       setTimeout(() => setSaveStatus('idle'), 2000);
     } catch (err) {
       console.error(err);
       setSaveStatus('error');
       setTimeout(() => setSaveStatus('idle'), 3000);
     }
-  }, [draft, filePath, filename, commitMsg]);
+  }, [draft, filePath, filename]);
 
   return (
     <div className="flex flex-col gap-0">
@@ -83,13 +81,6 @@ export default function MarkdownEditor({ initialContent, filePath, filename }: M
           <CopyButton text={content} label="Copy" />
           {mode === 'edit' && (
             <>
-              <input
-                type="text"
-                placeholder="Commit message (optional)"
-                value={commitMsg}
-                onChange={(e) => setCommitMsg(e.target.value)}
-                className="rounded-lg border border-[#e7e5e4] px-2 py-1 text-xs text-neutral-700 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-300 w-48"
-              />
               <button
                 onClick={handleCancel}
                 className="rounded-lg border border-[#e7e5e4] bg-white px-3 py-1 text-xs text-neutral-600 hover:bg-neutral-50 transition-colors"
@@ -112,8 +103,8 @@ export default function MarkdownEditor({ initialContent, filePath, filename }: M
                   : saveStatus === 'saved'
                   ? '✓ Saved'
                   : saveStatus === 'error'
-                  ? 'Error'
-                  : 'Save & Commit'}
+                  ? 'Error saving'
+                  : 'Save'}
               </button>
             </>
           )}
