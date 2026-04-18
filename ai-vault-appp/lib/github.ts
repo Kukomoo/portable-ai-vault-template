@@ -51,12 +51,10 @@ export async function listDirectory(path: string): Promise<GitHubItem[]> {
 
 export async function getFileContent(path: string): Promise<string> {
   const data = await githubFetch(path);
-
   // Case 1: content is present and base64 encoded (files < 1MB)
   if (data.encoding === 'base64' && data.content) {
     return Buffer.from(data.content.replace(/\n/g, ''), 'base64').toString('utf-8');
   }
-
   // Case 2: file too large for contents API - use download_url
   if (data.download_url) {
     const res = await fetch(data.download_url, {
@@ -68,7 +66,6 @@ export async function getFileContent(path: string): Promise<string> {
     }
     return res.text();
   }
-
   throw new Error(`Could not decode file content for path: ${path}`);
 }
 
@@ -93,6 +90,24 @@ export async function updateFileContent(
   if (!res.ok) {
     const err = await res.text();
     throw new Error(`Failed to update file: ${err}`);
+  }
+}
+
+export async function createFile(
+  path: string,
+  content: string,
+  message: string
+): Promise<void> {
+  const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
+  const encoded = Buffer.from(content, 'utf-8').toString('base64');
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: { ...authHeaders, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message, content: encoded }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Failed to create file: ${err}`);
   }
 }
 
