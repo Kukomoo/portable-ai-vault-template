@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import MarkdownRenderer from './MarkdownRenderer';
+
 import CopyButton from './CopyButton';
 
 interface MarkdownEditorProps {
@@ -117,11 +117,7 @@ export default function MarkdownEditor({ initialContent, filePath, filename }: M
       </div>
 
       {/* Content pane */}
-      {mode === 'view' ? (
-        <div className="p-6">
-          <MarkdownRenderer content={content} />
-        </div>
-      ) : (
+      {mode === 'view' ? ((
         <div className="grid grid-cols-2 divide-x divide-[#e7e5e4] min-h-[500px]">
           {/* Editor */}
           <div className="flex flex-col">
@@ -136,17 +132,7 @@ export default function MarkdownEditor({ initialContent, filePath, filename }: M
               placeholder="Write markdown here..."
             />
           </div>
-          {/* Preview */}
-          <div className="flex flex-col overflow-auto">
-            <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-neutral-400 bg-neutral-50 border-b border-[#e7e5e4]">
-              Preview
-            </div>
-            <div className="p-4 overflow-auto">
-              <MarkdownRenderer content={draft} />
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+        </div>)
+
   );
 }
