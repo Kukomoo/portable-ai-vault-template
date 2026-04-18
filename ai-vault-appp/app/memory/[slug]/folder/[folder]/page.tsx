@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { listDirectory } from '@/lib/github';
 import FolderCopyButton from '@/app/components/FolderCopyButton';
+import NewFileButton from '@/app/components/NewFileButton';
 
 const friendlyFolderNames: Record<string, string> = {
   '01-identity': 'Identity',
@@ -52,61 +53,53 @@ export default async function FolderPage({
             {files.length} file{files.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Link
-            href={`/memory/${slug}/folder/${folder}/new`}
-            className="inline-flex items-center gap-2 rounded-lg border border-[#e7e5e4] bg-white px-3 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-50 transition-colors"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            New file
-          </Link>
+        <div className="flex items-center gap-2">
+          <NewFileButton folderPath={folderPath} slug={slug} folder={folder} />
           <FolderCopyButton files={fileList} folderName={friendlyName} />
         </div>
       </header>
 
       {/* File list */}
-      <section>
-        <div className="rounded-2xl border border-[#e7e5e4] bg-white text-sm shadow-[0_1px_0_rgba(15,23,42,0.03)] overflow-hidden">
-          {files.length === 0 ? (
-            <div className="px-6 py-10 text-center text-neutral-400 text-sm">
-              No files yet in this folder.
-            </div>
-          ) : (
-            <ul>
-              {files.map((file) => (
-                <li
-                  key={file.path}
-                  className="group flex items-center justify-between border-b border-neutral-100 last:border-none px-4 hover:bg-neutral-50 transition-colors"
+      <div className="flex flex-col gap-1">
+        {files.length === 0 ? (
+          <p className="text-sm text-neutral-400 py-8 text-center">
+            No files yet in this folder.
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-1">
+            {files.map((file) => (
+              <li key={file.path}>
+                <Link
+                  href={`/memory/${slug}/folder/${folder}/file/${encodeURIComponent(file.name)}`}
+                  className="flex items-center justify-between rounded-xl border border-[#e7e5e4] bg-white px-4 py-3 hover:bg-neutral-50 transition-colors group"
                 >
-                  <Link
-                    href={`/memory/${slug}/folder/${folder}/file/${encodeURIComponent(file.name)}`}
-                    className="flex flex-1 items-center gap-3 py-3 text-neutral-800 hover:text-black"
-                  >
+                  <div className="flex items-center gap-3">
                     <span className="text-base">📄</span>
-                    <span className="font-medium">{file.name.replace('.md', '')}</span>
-                    <span className="text-[11px] text-neutral-400 font-normal">.md</span>
-                  </Link>
-                  <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-[11px] text-neutral-400">
-                      {(file.size / 1024).toFixed(1)} KB
-                    </span>
-                    <Link
+                    <div>
+                      <span className="text-sm font-medium text-neutral-800">
+                        {file.name.replace('.md', '')}
+                      </span>
+                      <span className="text-xs text-neutral-400 ml-1">.md</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-neutral-400">
+                    <span>{(file.size / 1024).toFixed(1)} KB</span>
+                    <a
                       href={file.html_url}
                       target="_blank"
-                      className="text-[11px] text-neutral-400 hover:text-black transition-colors"
+                      rel="noopener noreferrer"
+                      className="hover:text-neutral-700 transition-colors"
+                      onClick={e => e.stopPropagation()}
                     >
                       GitHub ↗
-                    </Link>
+                    </a>
                   </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </section>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
