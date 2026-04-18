@@ -1,32 +1,20 @@
 // app/memory/[slug]/page.tsx
-import Link from 'next/link';
-import { listDirectory } from '../../lib/github';
+// slug = GitHub repo name (the memory vault)
+import { listDirectory, getFileContent } from '../../lib/github';
 import VaultCopyButton from '@/app/components/VaultCopyButton';
+import NewFileButton from '@/app/components/NewFileButton';
 
-const friendlyFolderNames: Record<string, string> = {
-  '01-identity': 'Identity',
-  '02-projects': 'Projects',
-  '03-policies': 'Policies',
-  '04-prompts': 'Prompts',
-};
+const GITHUB_OWNER = process.env.GITHUB_OWNER;
 
-const memoryMeta: Record<string, { icon: string; title: string; description: string }> = {
-  personal: {
-    icon: '🧠',
-    title: 'Personal',
-    description: 'Your reusable personal AI memory — preferences, identity, and saved prompts.',
-  },
-  'founder-os': {
-    icon: '🚀',
-    title: 'Founder OS',
-    description: 'Company context, product strategy, ICP, and hiring policies.',
-  },
-  'team-vault': {
-    icon: '👥',
-    title: 'Team Vault',
-    description: 'Shared knowledge, working agreements, and client context for small teams.',
-  },
-};
+function parseReadme(content: string, slug: string): { name: string; icon: string; description: string } {
+  const lines = content.split('\n').filter((l) => l.trim() !== '');
+  const heading = lines[0]?.replace(/^#+\s*/, '').trim() ?? slug;
+  const emojiMatch = heading.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u);
+  const icon = emojiMatch ? emojiMatch[0] : '📊';
+  const name = emojiMatch ? heading.replace(emojiMatch[0], '').trim() : heading;
+  const description = lines.slice(1).find((l) => l.trim() && !l.startsWith('#')) ?? '';
+  return { name, icon, description };
+}
 
 export default async function MemoryPage({
   params,
@@ -34,55 +22,100 @@ export default async function MemoryPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const meta = memoryMeta[slug] ?? {
-    icon: '📁',
-    title: slug,
-    description: 'Your AI memory space.',
-  };
-  const memoryItems = await listDirectory('memory');
-  const folders = memoryItems.filter((item) => item.type === 'dir');
 
-  // Build folder list with paths for VaultCopyButton
-  const folderList = folders.map((f) => ({
-    name: friendlyFolderNames[f.name] ?? f.name,
-    path: f.path,
-  }));
+  // Fetch all .md files from the root of this repo
+  let files: Array<{ name: string; path: string }> = [];
+  let meta = { name: slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()), icon: '📊', description: '' };
+
+  try {
+    const items = await listDirectory_repo(slug);
+    files = items
+      .filter((item: { type: string; name: string }) => item.type === 'file' && item.name.endsWith('.md'))
+      .map((item: { name: string; path: string }) => ({ name: item.name, path: item.path }));
+  } catch {}
+
+  // Try to read the README for title/icon/description
+  try {
+    const readme = await getFileContent_repo(slug, 'README.md');
+    meta = parseReadme(readme, slug);
+  } catch {}
+
+  // Build folder list for the Copy for AI button
+  const folderList = [{ name: 'All files', path: '' }];
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6">
-      <header className="flex items-center justify-between">
+    <div className="mx-auto max-w-3xl">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">
-            {meta.icon} {meta.title}
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {meta.icon} {meta.name}
           </h1>
-          <p className="text-xs text-neutral-600">{meta.description}</p>
+          {meta.description && (
+            <p className="mt-1 text-sm text-neutral-500">{meta.description}</p>
+          )}
         </div>
-        <VaultCopyButton folders={folderList} vaultName={meta.title} />
-      </header>
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-neutral-800">Folders</h2>
-        <div className="rounded-2xl border border-[#e7e5e4] bg-white p-3 text-sm shadow-[0_1px_0_rgba(15,23,42,0.03)]">
-          <ul>
-            {folders.map((f) => (
-              <li
+        <div className="flex items-center gap-2">
+          <VaultCopyButton repo={slug} folders={folderList} />
+          <NewFileButton repo={slug} folder="" />
+        </div>
+      </div>
+
+      <section>
+        <h2 className="mb-3 text-sm font-semibold text-neutral-700">Files</h2>
+        {files.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-neutral-300 py-10 text-center">
+            <p className="text-sm text-neutral-400">No files yet. Create your first one above.</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {files.map((f) => (
+              <a
                 key={f.path}
-                className="flex items-center justify-between border-b border-neutral-100 last:border-none"
+                href={`/memory/${slug}/file/${encodeURIComponent(f.path)}`}
+                className="flex items-center gap-3 rounded-xl border border-[#e7e5e4] bg-white px-4 py-3 text-sm hover:shadow-sm transition-shadow"
               >
-                <Link
-                  href={`/memory/${slug}/folder/${encodeURIComponent(f.name)}`}
-                  className="flex flex-1 items-center gap-2 py-2 text-neutral-800 hover:text-black"
-                >
-                  <span className="text-xs text-neutral-400">📁</span>
-                  <span>{friendlyFolderNames[f.name] ?? f.name}</span>
-                </Link>
-                <span className="text-[11px] uppercase tracking-wide text-neutral-400">
-                  folder
-                </span>
-              </li>
+                <span className="text-base">📝</span>
+                <span className="font-medium text-neutral-900">{f.name.replace(/\.md$/, '')}</span>
+              </a>
             ))}
-          </ul>
-        </div>
+          </div>
+        )}
       </section>
     </div>
   );
+}
+
+// Helper: list root contents of a specific repo
+async function listDirectory_repo(repo: string) {
+  const token = process.env.GITHUB_TOKEN;
+  const headers: HeadersInit = {
+    Accept: 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28',
+  };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const res = await fetch(
+    `https://api.github.com/repos/${GITHUB_OWNER}/${repo}/contents`,
+    { headers, cache: 'no-store' }
+  );
+  if (!res.ok) throw new Error(`${res.status}`);
+  return res.json();
+}
+
+async function getFileContent_repo(repo: string, path: string): Promise<string> {
+  const token = process.env.GITHUB_TOKEN;
+  const headers: HeadersInit = {
+    Accept: 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28',
+  };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const res = await fetch(
+    `https://api.github.com/repos/${GITHUB_OWNER}/${repo}/contents/${path}`,
+    { headers, cache: 'no-store' }
+  );
+  if (!res.ok) throw new Error(`${res.status}`);
+  const data = await res.json() as { content: string };
+  const cleaned = data.content.replace(/\n/g, '');
+  return decodeURIComponent(escape(atob(cleaned)));
 }
