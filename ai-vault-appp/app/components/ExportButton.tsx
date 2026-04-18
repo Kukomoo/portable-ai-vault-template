@@ -1,5 +1,9 @@
 'use client';
 import { useState } from 'react';
+import {
+  BTN_BASE, BTN_NEUTRAL, BTN_GREEN, BTN_RED,
+  IconCheck, IconDownload,
+} from '@/app/components/CopyButton';
 
 interface FileItem {
   name: string;
@@ -51,7 +55,7 @@ export default function ExportButton({ folders, spaceName }: ExportButtonProps) 
           output += `\n## ${item.folder}\n\n`;
         }
         const displayName = item.filename.replace('.md', '');
-        output += `### ${displayName}\n\n`;
+        output += `### ${displayName}\n`;
         output += item.content.trim();
         output += `\n\n---\n\n`;
       }
@@ -80,21 +84,18 @@ export default function ExportButton({ folders, spaceName }: ExportButtonProps) 
     <button
       onClick={handleExport}
       disabled={status === 'loading'}
-      className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
-        status === 'done'
-          ? 'border-green-300 bg-green-50 text-green-700'
-          : status === 'error'
-          ? 'border-red-300 bg-red-50 text-red-700'
-          : 'border-[#e7e5e4] bg-white text-neutral-700 hover:bg-neutral-50'
+      className={`${BTN_BASE} ${
+        status === 'done' ? BTN_GREEN : status === 'error' ? BTN_RED : BTN_NEUTRAL
       }`}
     >
+      {status === 'done' ? IconCheck : IconDownload}
       {status === 'loading'
         ? 'Preparing...'
         : status === 'done'
-        ? '\u2713 Downloaded'
+        ? 'Downloaded'
         : status === 'error'
         ? 'Error'
-        : '\u2193 Export all'}
+        : 'Export all'}
     </button>
   );
 }
