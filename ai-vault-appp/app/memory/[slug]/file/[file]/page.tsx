@@ -69,9 +69,8 @@ export default async function FileViewerPage({
             {displayTitle}
           </h1>
         </div>
-        <CopyButton content={content} />
+        <CopyButton content={content} filename={fileName} />
       </header>
-
       <div className="rounded-2xl border border-[#e7e5e4] bg-white p-5 shadow-[0_1px_0_rgba(15,23,42,0.03)]">
         {error ? (
           <p className="text-sm text-red-500">{error}</p>
