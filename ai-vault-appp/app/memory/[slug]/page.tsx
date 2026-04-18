@@ -1,6 +1,7 @@
 // app/memory/[slug]/page.tsx
 import Link from 'next/link';
 import { listDirectory } from '../../lib/github';
+import VaultCopyButton from '@/app/components/VaultCopyButton';
 
 const friendlyFolderNames: Record<string, string> = {
   '01-identity': 'Identity',
@@ -38,9 +39,14 @@ export default async function MemoryPage({
     title: slug,
     description: 'Your AI memory space.',
   };
-
   const memoryItems = await listDirectory('memory');
   const folders = memoryItems.filter((item) => item.type === 'dir');
+
+  // Build folder list with paths for VaultCopyButton
+  const folderList = folders.map((f) => ({
+    name: friendlyFolderNames[f.name] ?? f.name,
+    path: f.path,
+  }));
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
@@ -51,6 +57,7 @@ export default async function MemoryPage({
           </h1>
           <p className="text-xs text-neutral-600">{meta.description}</p>
         </div>
+        <VaultCopyButton folders={folderList} vaultName={meta.title} />
       </header>
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-neutral-800">Folders</h2>
