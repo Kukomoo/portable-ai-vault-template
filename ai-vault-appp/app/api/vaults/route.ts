@@ -1,48 +1,58 @@
 // app/api/vaults/route.ts
+// Lists all of the authenticated user's GitHub repos tagged as AI memories
 import { NextResponse } from 'next/server';
-import { listDirectory, getFileContent } from '@/app/lib/github';
 
-interface VaultMeta {
-  slug: string;
-  name: string;
-  icon: string;
-  description: string;
-}
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GITHUB_OWNER = process.env.GITHUB_OWNER;
 
-function parseReadme(content: string, slug: string): { name: string; icon: string; description: string } {
-  const lines = content.split('\n').filter((l) => l.trim() !== '');
-  const heading = lines[0]?.replace(/^#+\s*/, '').trim() ?? slug;
-
-  // Try to extract emoji icon from heading (e.g. "# 🧠 Personal")
-  const emojiMatch = heading.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u);
-  const icon = emojiMatch ? emojiMatch[0] : '📁';
-  const name = emojiMatch ? heading.replace(emojiMatch[0], '').trim() : heading;
-
-  // Description: first non-empty line after heading that isn't a heading
-  const description = lines.slice(1).find((l) => l.trim() && !l.startsWith('#')) ?? '';
-
-  return { name, icon, description };
-}
+const authHeaders = {
+  Authorization: `Bearer ${GITHUB_TOKEN}`,
+  Accept: 'application/vnd.github+json',
+  'X-GitHub-Api-Version': '2022-11-28',
+};
 
 export async function GET() {
   try {
-    const dirs = await listDirectory('memory');
-    const vaultDirs = dirs.filter((item) => item.type === 'dir');
-
-    const vaults = await Promise.all(
-      vaultDirs.map(async (dir): Promise<VaultMeta> => {
-        const slug = dir.name;
-        try {
-          const readme = await getFileContent(`memory/${slug}/README.md`);
-          const { name, icon, description } = parseReadme(readme, slug);
-          return { slug, name, icon, description };
-        } catch {
-          // No README — derive name from slug
-          const name = slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-          return { slug, name, icon: '📁', description: '' };
-        }
-      })
+    // Fetch all repos for the authenticated user
+    const res = await fetch(
+      `https://api.github.com/users/${GITHUB_OWNER}/repos?per_page=100&sort=updated`,
+      { headers: authHeaders, cache: 'no-store' }
     );
+
+    if (!res.ok) {
+      throw new Error(`GitHub API error: ${res.status}`);
+    }
+
+    const repos = await res.json() as Array<{
+      name: string;
+      description: string | null;
+      topics: string[];
+      updated_at: string;
+      private: boolean;
+    }>;
+
+    // Only include repos tagged with the ai-memory-vault topic
+    const memoryRepos = repos.filter((r) => r.topics?.includes('ai-memory-vault'));
+
+    const vaults = memoryRepos.map((repo) => {
+      // Parse icon from description prefix, e.g. "🧠 My personal AI memory"
+      const desc = repo.description ?? '';
+      const emojiMatch = desc.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u);
+      const icon = emojiMatch ? emojiMatch[0] : '📊';
+      const description = emojiMatch ? desc.replace(emojiMatch[0], '').trim() : desc;
+
+      // Convert repo name to friendly display name
+      const name = repo.name
+        .replace(/-/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+
+      return {
+        slug: repo.name,
+        name,
+        icon,
+        description,
+      };
+    });
 
     return NextResponse.json({ vaults }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (err) {
