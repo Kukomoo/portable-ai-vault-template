@@ -1,19 +1,34 @@
 // app/memory/[slug]/page.tsx
-// slug = GitHub repo name (the memory vault)
+import Link from 'next/link';
 import VaultCopyButton from '@/app/components/VaultCopyButton';
 import NewFileButton from '@/app/components/NewFileButton';
+import FileActionsMenu from '@/app/components/FileActionsMenu';
+import { getFileContent } from '@/lib/github';
+// ✅ Default import — no curly braces
+import MemoryIcon from '@/app/components/MemoryIcon';
 
 const GITHUB_OWNER = process.env.GITHUB_OWNER;
-
-// Files that are internal/system files and should never be shown to users
 const HIDDEN_FILES = ['README.md', 'readme.md'];
 
 function parseVaultMeta(repoDescription: string, slug: string): { name: string; icon: string; description: string } {
   const desc = repoDescription ?? '';
-  const emojiMatch = desc.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u);
-  const icon = emojiMatch ? emojiMatch[0] : '📊';
-  const description = emojiMatch ? desc.replace(emojiMatch[0], '').trim() : desc;
   const name = slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
+  // New format: "[iconId] description"
+  const idMatch = desc.match(/^\[([a-zA-Z0-9_-]+)\]\s*/);
+  if (idMatch) {
+    return {
+      icon: idMatch[1],
+      description: desc.replace(idMatch[0], '').trim(),
+      name,
+    };
+  }
+
+  // Legacy format: emoji at start of description
+  const emojiMatch = desc.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u);
+  const icon = emojiMatch ? emojiMatch[0] : 'barChart';
+  const description = emojiMatch ? desc.replace(emojiMatch[0], '').trim() : desc;
+
   return { name, icon, description };
 }
 
@@ -31,23 +46,31 @@ export default async function MemoryPage({
 }) {
   const { slug } = await params;
 
-  let files: Array<{ name: string; path: string }> = [];
-  let meta = { name: slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()), icon: '📊', description: '' };
+  let files: Array<{ name: string; path: string; content: string }> = [];
+  let meta = {
+    name: slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+    icon: 'barChart',
+    description: '',
+  };
 
   try {
-    // Get repo info for the description/icon
     const repoInfo = await fetchRepoInfo(slug);
     meta = parseVaultMeta(repoInfo.description ?? '', slug);
 
-    // List all .md files, excluding system files
     const items = await fetchRepoContents(slug);
-    files = items
-      .filter((item: { type: string; name: string }) =>
-        item.type === 'file' &&
-        item.name.endsWith('.md') &&
-        !HIDDEN_FILES.includes(item.name)
-      )
-      .map((item: { name: string; path: string }) => ({ name: item.name, path: item.path }));
+    const filtered = items.filter((item: { type: string; name: string }) =>
+      item.type === 'file' &&
+      item.name.endsWith('.md') &&
+      !HIDDEN_FILES.includes(item.name)
+    );
+
+    files = await Promise.all(
+      filtered.map(async (item: { name: string; path: string }) => {
+        let content = '';
+        try { content = await getFileContent(item.path, slug); } catch {}
+        return { name: item.name, path: item.path, content };
+      })
+    );
   } catch {}
 
   const folderList = [{ name: 'All files', path: '' }];
@@ -56,15 +79,16 @@ export default async function MemoryPage({
     <div className="mx-auto max-w-3xl">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {meta.icon} {meta.name}
+          <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
+            <MemoryIcon icon={meta.icon} size={28} />
+            {meta.name}
           </h1>
           {meta.description && (
             <p className="mt-1 text-sm text-neutral-500">{meta.description}</p>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <VaultCopyButton repo={slug} folders={folderList} />
+          <VaultCopyButton repo={slug} vaultName={meta.name} folders={folderList} />
           <NewFileButton repo={slug} folder="" />
         </div>
       </div>
@@ -74,23 +98,45 @@ export default async function MemoryPage({
         {files.length === 0 ? (
           <div className="rounded-xl border border-dashed border-neutral-300 py-10 text-center">
             <p className="text-sm text-neutral-400">No files yet.</p>
-            <p className="mt-1 text-xs text-neutral-400">Click &quot;+ New File&quot; to add your first note.</p>
+            <p className="mt-1 text-xs text-neutral-400">
+              Click &quot;+ New File&quot; to add your first note.
+            </p>
           </div>
         ) : (
           <div className="space-y-2">
             {files.map((f) => (
-              <a
+              <div
                 key={f.path}
-                href={`/memory/${slug}/file/${encodeURIComponent(f.path)}`}
                 className="flex items-center gap-3 rounded-xl border border-[#e7e5e4] bg-white px-4 py-3 text-sm hover:shadow-sm transition-shadow group"
               >
-                <span className="text-base">📝</span>
-                <div className="flex flex-col">
-                  <span className="font-medium text-neutral-900">{friendlyFileName(f.name)}</span>
-                  <span className="text-xs text-neutral-400">{f.name}</span>
+                <Link
+                  href={`/memory/${slug}/file/${encodeURIComponent(f.path)}`}
+                  className="flex flex-1 items-center gap-3 min-w-0"
+                >
+                  <span className="text-base">📝</span>
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-medium text-neutral-900">{friendlyFileName(f.name)}</span>
+                    <span className="text-xs text-neutral-400 truncate">
+                      {f.name.replace(/\.md$/i, '')}
+                    </span>
+                  </div>
+                </Link>
+
+                <div className="flex items-center gap-2 ml-auto flex-shrink-0">
+                  <FileActionsMenu
+                    filePath={f.path}
+                    repo={slug}
+                    initialContent={f.content}
+                    fileName={f.name}
+                  />
+                  <Link
+                    href={`/memory/${slug}/file/${encodeURIComponent(f.path)}`}
+                    className="text-neutral-300 group-hover:text-neutral-500 transition-colors"
+                  >
+                    →
+                  </Link>
                 </div>
-                <span className="ml-auto text-neutral-300 group-hover:text-neutral-500 transition-colors">→</span>
-              </a>
+              </div>
             ))}
           </div>
         )}

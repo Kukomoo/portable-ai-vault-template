@@ -1,12 +1,12 @@
 'use client';
 import { useState } from 'react';
 
-// Shared design token — used by all action buttons across the app
+// Shared design tokens — used by all action buttons across the app
 export const BTN_BASE =
   'inline-flex items-center gap-2 rounded-lg border px-3 py-1 text-xs font-medium transition-colors disabled:opacity-60';
 export const BTN_NEUTRAL = 'border-[#e7e5e4] bg-white text-neutral-700 hover:bg-neutral-50';
-export const BTN_GREEN  = 'border-green-300 bg-green-50 text-green-700';
-export const BTN_RED    = 'border-red-300 bg-red-50 text-red-700';
+export const BTN_GREEN   = 'border-green-300 bg-green-50 text-green-700';
+export const BTN_RED     = 'border-red-300 bg-red-50 text-red-700';
 
 // Reusable SVG icons
 export const IconCheck = (
@@ -40,47 +40,25 @@ export const IconPlus = (
 
 interface CopyButtonProps {
   content: string;
-  filename?: string; // e.g. "about-me.md" — used for download
+  filename?: string;
 }
 
-export default function CopyButton({ content, filename = 'file.md' }: CopyButtonProps) {
-  const [copyStatus, setCopyStatus] = useState<'idle' | 'done'>('idle');
-  const [dlStatus,   setDlStatus]   = useState<'idle' | 'done'>('idle');
+export default function CopyButton({ content }: CopyButtonProps) {
+  const [status, setStatus] = useState<'idle' | 'done'>('idle');
 
   async function handleCopy() {
     await navigator.clipboard.writeText(content);
-    setCopyStatus('done');
-    setTimeout(() => setCopyStatus('idle'), 2000);
-  }
-
-  function handleDownload() {
-    const blob = new Blob([content], { type: 'text/markdown' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href     = url;
-    a.download = filename.endsWith('.md') ? filename : `${filename}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
-    setDlStatus('done');
-    setTimeout(() => setDlStatus('idle'), 2000);
+    setStatus('done');
+    setTimeout(() => setStatus('idle'), 2000);
   }
 
   return (
-    <div className="flex gap-2">
-      <button
-        onClick={handleCopy}
-        className={`${BTN_BASE} ${copyStatus === 'done' ? BTN_GREEN : BTN_NEUTRAL}`}
-      >
-        {copyStatus === 'done' ? IconCheck : IconCopy}
-        {copyStatus === 'done' ? 'Copied!' : 'Copy'}
-      </button>
-      <button
-        onClick={handleDownload}
-        className={`${BTN_BASE} ${dlStatus === 'done' ? BTN_GREEN : BTN_NEUTRAL}`}
-      >
-        {dlStatus === 'done' ? IconCheck : IconDownload}
-        {dlStatus === 'done' ? 'Downloaded!' : 'Download file'}
-      </button>
-    </div>
+    <button
+      onClick={handleCopy}
+      className={`${BTN_BASE} ${status === 'done' ? BTN_GREEN : BTN_NEUTRAL}`}
+    >
+      {status === 'done' ? IconCheck : IconCopy}
+      {status === 'done' ? 'Copied!' : 'Copy'}
+    </button>
   );
 }

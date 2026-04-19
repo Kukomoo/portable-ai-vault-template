@@ -13,21 +13,24 @@ interface FolderItem {
 interface VaultCopyButtonProps {
   folders: FolderItem[];
   vaultName: string;
+  repo: string; // ← ADD
 }
 
 async function buildVaultContent(
   folders: FolderItem[],
-  vaultName: string
+  vaultName: string,
+  repo: string // ← ADD
 ): Promise<string> {
   const sectionBlocks: string[] = [];
   for (const folder of folders) {
-    const listRes = await fetch(`/api/folder-files?path=${encodeURIComponent(folder.path)}`);
+    // ← Add repo param to both API calls
+    const listRes = await fetch(`/api/folder-files?repo=${encodeURIComponent(repo)}&path=${encodeURIComponent(folder.path)}`);
     if (!listRes.ok) continue;
     const { files } = await listRes.json() as { files: { name: string; path: string }[] };
     if (!files || files.length === 0) continue;
     const fileContents = await Promise.all(
       files.map(async (file) => {
-        const res = await fetch(`/api/file-content?path=${encodeURIComponent(file.path)}`);
+        const res = await fetch(`/api/file-content?repo=${encodeURIComponent(repo)}&path=${encodeURIComponent(file.path)}`);
         if (!res.ok) return null;
         const { content } = await res.json();
         return { name: file.name, content: content as string };
@@ -45,16 +48,17 @@ async function buildVaultContent(
 }
 
 async function getAllVaultFiles(
-  folders: FolderItem[]
+  folders: FolderItem[],
+  repo: string // ← ADD
 ): Promise<{ name: string; content: string; folderName: string }[]> {
   const allFiles: { name: string; content: string; folderName: string }[] = [];
   for (const folder of folders) {
-    const listRes = await fetch(`/api/folder-files?path=${encodeURIComponent(folder.path)}`);
+    const listRes = await fetch(`/api/folder-files?repo=${encodeURIComponent(repo)}&path=${encodeURIComponent(folder.path)}`);
     if (!listRes.ok) continue;
     const { files } = await listRes.json() as { files: { name: string; path: string }[] };
     if (!files || files.length === 0) continue;
     for (const file of files) {
-      const res = await fetch(`/api/file-content?path=${encodeURIComponent(file.path)}`);
+      const res = await fetch(`/api/file-content?repo=${encodeURIComponent(repo)}&path=${encodeURIComponent(file.path)}`);
       if (!res.ok) continue;
       const { content } = await res.json();
       allFiles.push({ name: file.name, content: content as string, folderName: folder.name });
@@ -95,14 +99,14 @@ function buildZip(files: { name: string; content: string }[]): Uint8Array {
   return cat([...localHeaders,...centralDirs,eocd]);
 }
 
-export default function VaultCopyButton({ folders, vaultName }: VaultCopyButtonProps) {
+export default function VaultCopyButton({ folders, vaultName, repo }: VaultCopyButtonProps) {
   const [copyStatus, setCopyStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [dlStatus,   setDlStatus]   = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
 
   async function handleCopy() {
     setCopyStatus('loading');
     try {
-      const text = await buildVaultContent(folders, vaultName);
+      const text = await buildVaultContent(folders, vaultName, repo); // ← pass repo
       await navigator.clipboard.writeText(text);
       setCopyStatus('done');
       setTimeout(() => setCopyStatus('idle'), 2500);
@@ -116,7 +120,7 @@ export default function VaultCopyButton({ folders, vaultName }: VaultCopyButtonP
   async function handleDownload() {
     setDlStatus('loading');
     try {
-      const allFiles = await getAllVaultFiles(folders);
+      const allFiles = await getAllVaultFiles(folders, repo); // ← pass repo
       if (allFiles.length === 0) throw new Error('No files found');
       if (allFiles.length === 1) {
         const f = allFiles[0];
@@ -154,9 +158,9 @@ export default function VaultCopyButton({ folders, vaultName }: VaultCopyButtonP
     copyStatus === 'error'   ? 'Error'       : 'Copy all';
 
   const dlLabel =
-    dlStatus === 'loading' ? 'Downloading...'    :
-    dlStatus === 'done'    ? 'Downloaded!'        :
-    dlStatus === 'error'   ? 'Error'              : 'Download all files';
+    dlStatus === 'loading' ? 'Downloading...' :
+    dlStatus === 'done'    ? 'Downloaded!'    :
+    dlStatus === 'error'   ? 'Error'          : 'Download all files';
 
   return (
     <div className="flex gap-2">

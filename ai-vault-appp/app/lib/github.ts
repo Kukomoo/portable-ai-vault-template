@@ -9,24 +9,13 @@ if (!owner || !repo) {
   console.warn('GITHUB_OWNER or GITHUB_REPO env vars are not set.');
 }
 
-async function githubFetch<T>(path: string): Promise<T> {
-  const headers: HeadersInit = {
-    Accept: 'application/vnd.github+json',
-    'X-GitHub-Api-Version': '2022-11-28',
-  };
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
-  const res = await fetch(`${GITHUB_API_BASE}${path}`, {
-    headers,
-    cache: 'no-store',
+// After
+async function githubFetch(path: string, repo: string = REPO_NAME ?? '') {
+  const url = `https://api.github.com/repos/${REPO_OWNER}/${repo}/contents/${path}`;
+  const res = await fetch(url, {
+    headers: authHeaders,
+    cache: 'no-store',           // ← always fresh from GitHub
   });
-  if (!res.ok) {
-    throw new Error(`GitHub API error: ${res.status} ${res.statusText}`);
-  }
-  return res.json() as Promise<T>;
-}
 
 async function githubRequest<T>(
   path: string,
