@@ -5,7 +5,7 @@ import {
   Sprout, Trophy, Sparkles, PieChart, Puzzle, Folder, BarChart, Key, Laptop,
   Smartphone, Cpu, Wifi, Database, Settings, Terminal, Layers, Ruler, Search,
   Heart, Star, Camera, Brush, Feather, Compass, Home, Film, Music, Clock,
-  Lock, Cloud, Milestone, GraduationCap, Map, Gift, Anchor, Infinity, Activity,
+  Lock, Cloud, Milestone, GraduationCap, Map as MapIcon, Gift, Anchor, Infinity, Activity,
   Dumbbell, HeartPulse, Utensils, Palmtree, Headphones, Gamepad2, Timer, Leaf, Moon, Sun
 } from 'lucide-react';
 
@@ -339,7 +339,7 @@ const page6: IconPage = {
   label: 'Wellness & Hobbies',
   icons: [
     { id: 'activity', label: 'Activity', svg: <Activity {...sceneStroke} /> },
-    { id: 'map', label: 'Plan', svg: <Map {...sceneStroke} /> },
+    { id: 'map', label: 'Plan', svg: <MapIcon {...sceneStroke} /> },
     { id: 'gift', label: 'Share', svg: <Gift {...sceneStroke} /> },
     { id: 'anchor', label: 'Stable', svg: <Anchor {...sceneStroke} /> },
     { id: 'infinity', label: 'Continuous', svg: <Infinity {...sceneStroke} /> },
@@ -365,7 +365,7 @@ function getIconValue(icon: MemoryIcon) {
 }
 
 function IconRenderer({ icon }: { icon: MemoryIcon }) {
-  return <div className=\"h-full w-full flex items-center justify-center\">{icon.svg}</div>;
+  return <div className="h-full w-full flex items-center justify-center">{icon.svg}</div>;
 }
 
 function IconPicker({
@@ -395,31 +395,31 @@ function IconPicker({
   const canGoRight = pageIndex < pages.length - 1;
 
   return (
-    <div className=\"space-y-4\">
-      <div className=\"flex items-center justify-between\">
-        <span className=\"text-sm font-medium text-neutral-500\">Icon</span>
-        <div className=\"flex items-center gap-2\">
-          <span className=\"text-xs text-neutral-400\">{currentPage.label}</span>
-          <div className=\"flex gap-1\">
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-neutral-500">Icon</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-neutral-400">{currentPage.label}</span>
+          <div className="flex gap-1">
             <button
               onClick={() => canGoLeft && setPageIndex((prev) => prev - 1)}
               disabled={!canGoLeft}
-              className=\"flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-35\"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-35"
             >
-              <ChevronLeft className=\"h-4 w-4\" />
+              <ChevronLeft className="h-4 w-4" />
             </button>
             <button
               onClick={() => canGoRight && setPageIndex((prev) => prev + 1)}
               disabled={!canGoRight}
-              className=\"flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-35\"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-35"
             >
-              <ChevronRight className=\"h-4 w-4\" />
+              <ChevronRight className="h-4 w-4" />
             </button>
           </div>
         </div>
       </div>
 
-      <div className=\"grid grid-cols-5 gap-3\">
+      <div className="grid grid-cols-5 gap-3">
         {currentPage.icons.map((icon) => {
           const selected = icon.id === selectedIconId;
           return (
@@ -436,7 +436,7 @@ function IconPicker({
         })}
       </div>
 
-      <div className=\"flex justify-center gap-1.5 pt-1\">
+      <div className="flex justify-center gap-1.5 pt-1">
         {pages.map((page, index) => (
           <button
             key={page.id}
@@ -526,44 +526,44 @@ export default function NewMemoryButton({
       </button>
 
       {isOpen ? (
-        <div className=\"fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm\">
-          <div className=\"w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl animate-in fade-in zoom-in duration-200\">
-            <div className=\"mb-8 flex items-center justify-between\">
-              <h2 className=\"text-2xl font-semibold text-neutral-900\">New AI Memory</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="mb-8 flex items-center justify-between">
+              <h2 className="text-2xl font-semibold text-neutral-900">New AI Memory</h2>
               <button
                 onClick={closeModal}
-                className=\"flex h-10 w-10 items-center justify-center rounded-full text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-600\"
+                className="flex h-10 w-10 items-center justify-center rounded-full text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-600"
               >
-                <X className=\"h-6 w-6\" />
+                <X className="h-6 w-6" />
               </button>
             </div>
 
-            <div className=\"space-y-6\">
-              <div className=\"space-y-2\">
-                <label htmlFor=\"memory-name\" className=\"text-sm font-medium text-neutral-500\">
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label htmlFor="memory-name" className="text-sm font-medium text-neutral-500">
                   Name
                 </label>
                 <input
-                  id=\"memory-name\"
-                  type=\"text\"
+                  id="memory-name"
+                  type="text"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
-                  placeholder=\"e.g. Work Projects\"
-                  className=\"w-full rounded-2xl border border-neutral-200 bg-white px-5 py-4 text-lg text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-neutral-400\"
+                  placeholder="e.g. Work Projects"
+                  className="w-full rounded-2xl border border-neutral-200 bg-white px-5 py-4 text-lg text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-neutral-400"
                 />
               </div>
 
-              <div className=\"space-y-2\">
-                <label htmlFor=\"memory-description\" className=\"text-sm font-medium text-neutral-500\">
-                  Description <span className=\"text-neutral-300 font-normal\">(optional)</span>
+              <div className="space-y-2">
+                <label htmlFor="memory-description" className="text-sm font-medium text-neutral-500">
+                  Description <span className="text-neutral-300 font-normal">(optional)</span>
                 </label>
                 <input
-                  id=\"memory-description\"
-                  type=\"text\"
+                  id="memory-description"
+                  type="text"
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
-                  placeholder=\"What is this memory space for?\"
-                  className=\"w-full rounded-2xl border border-neutral-200 bg-white px-5 py-4 text-lg text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-neutral-400\"
+                  placeholder="What is this memory space for?"
+                  className="w-full rounded-2xl border border-neutral-200 bg-white px-5 py-4 text-lg text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-neutral-400"
                 />
               </div>
 
@@ -573,19 +573,19 @@ export default function NewMemoryButton({
                 onSelect={setSelectedIconId}
               />
 
-              <div className=\"flex items-center justify-end gap-3 pt-2\">
+              <div className="flex items-center justify-end gap-3 pt-2">
                 <button
-                  type=\"button\"
+                  type="button"
                   onClick={closeModal}
-                  className=\"rounded-2xl border border-neutral-200 bg-white px-7 py-4 text-lg font-medium text-neutral-600 transition hover:bg-neutral-50\"
+                  className="rounded-2xl border border-neutral-200 bg-white px-7 py-4 text-lg font-medium text-neutral-600 transition hover:bg-neutral-50"
                 >
                   Cancel
                 </button>
                 <button
-                  type=\"button\"
+                  type="button"
                   onClick={handleCreate}
                   disabled={!name.trim() || isSubmitting}
-                  className=\"rounded-2xl bg-neutral-900 px-7 py-4 text-lg font-medium text-white transition hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed\"
+                  className="rounded-2xl bg-neutral-900 px-7 py-4 text-lg font-medium text-white transition hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? 'Creating...' : 'Create memory'}
                 </button>
