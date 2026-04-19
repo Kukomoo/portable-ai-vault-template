@@ -1,3 +1,4 @@
+import { useRouter } from 'next/navigation';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ChevronLeft, ChevronRight, X, Brain, Rocket, Users, Briefcase, Book, Target,
@@ -8,6 +9,7 @@ import {
   Lock, Cloud, Milestone, GraduationCap, Map as MapIcon, Gift, Anchor, Infinity, Activity,
   Dumbbell, HeartPulse, Utensils, Palmtree, Headphones, Gamepad2, Timer, Leaf, Moon, Sun
 } from 'lucide-react';
+import { on } from 'events';
 
 type MemoryIcon = {
   id: string;
@@ -22,10 +24,12 @@ type IconPage = {
 };
 
 type NewMemoryButtonProps = {
-  onCreate?: (payload: { name: string; description: string; icon: string }) => void | Promise<void>;
+  onCreate?: (payload: { name: string; description: string; icon: string }) => Promise<{ slug?: string } | void> | { slug?: string } | void;
   triggerLabel?: string;
   className?: string;
 };
+
+const router = useRouter();
 
 const iconButtonBase =
   'flex h-14 w-14 items-center justify-center rounded-xl border border-neutral-200 bg-white text-2xl transition-all duration-150 hover:border-neutral-300 hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-neutral-300';
@@ -467,8 +471,11 @@ export default function NewMemoryButton({
         icon: selectedIcon.id,
       };
 
+      let createdSlug: string | null = null;
+
       if (onCreate) {
-        await onCreate(payload);
+        const result = await onCreate(payload);
+        createdSlug = result?.slug ?? null;
       } else {
         const res = await fetch('/api/memory-create', {
           method: 'POST',
@@ -481,9 +488,18 @@ export default function NewMemoryButton({
         if (!res.ok) {
           throw new Error(data?.error || 'Failed to create memory');
         }
+
+        createdSlug = data?.slug ?? null;
       }
 
       closeModal();
+
+      if (createdSlug) {
+        router.push(`/memory/${createdSlug}`);
+        router.refresh();
+      } else {
+        router.refresh();
+      }
     } catch (error) {
       console.error('Failed to create memory', error);
       setErrorMessage(error instanceof Error ? error.message : 'Failed to create memory');
