@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import DownloadAllButton from '@/app/components/DownloadAllButton';
 import NewMemoryButton from '@/app/components/NewMemoryButton';
+import MemoryIcon from '@/app/components/MemoryIcon';
+
 
 interface Vault {
   slug: string;
@@ -52,7 +54,7 @@ export default function HomePage() {
                 href={`/memory/${m.slug}`}
                 className="flex flex-col gap-2 rounded-xl border border-[#e7e5e4] bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
               >
-                <span className="text-2xl">{m.icon}</span>
+                <MemoryIcon icon={m.icon} size={28} />
                 <p className="font-medium text-neutral-900">{m.name}</p>
                 <p className="text-xs text-neutral-500 line-clamp-2">{m.description}</p>
               </Link>

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import NewMemoryButton from '@/app/components/NewMemoryButton';
+import MemoryIcon from './MemoryIcon';
 
 interface Vault {
   slug: string;
@@ -92,7 +93,7 @@ export default function SidebarNav() {
                     : 'text-neutral-600 hover:bg-neutral-100 hover:text-black'
                 }`}
               >
-                <span>{item.icon}</span>
+                <MemoryIcon icon={item.icon} size={16} />
                 <span className="truncate">{item.name}</span>
                 {isActive && (
                   <span className="ml-auto h-1.5 w-1.5 rounded-full bg-black" />
