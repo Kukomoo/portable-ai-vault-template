@@ -1,5 +1,5 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import MarkdownRenderer from './MarkdownRenderer';
 import CopyButton from './CopyButton';
 
@@ -15,17 +15,17 @@ export default function MarkdownEditor({ initialContent, filePath, filename }: M
   const [draft, setDraft] = useState(initialContent);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
-  const handleEdit = useCallback(() => {
+  function handleEdit() {
     setDraft(content);
     setMode('edit');
-  }, [content]);
+  }
 
-  const handleCancel = useCallback(() => {
+  function handleCancel() {
     setDraft(content);
     setMode('view');
-  }, [content]);
+  }
 
-  const handleSave = useCallback(async () => {
+  async function handleSave() {
     setSaveStatus('saving');
     try {
       const res = await fetch('/api/file-update', {
@@ -37,10 +37,12 @@ export default function MarkdownEditor({ initialContent, filePath, filename }: M
           message: `Update ${filename}`,
         }),
       });
+
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || 'Save failed');
       }
+
       setContent(draft);
       setSaveStatus('saved');
       setMode('view');
@@ -50,7 +52,7 @@ export default function MarkdownEditor({ initialContent, filePath, filename }: M
       setSaveStatus('error');
       setTimeout(() => setSaveStatus('idle'), 3000);
     }
-  }, [draft, filePath, filename]);
+  }
 
   return (
     <div className="flex flex-col gap-0">
@@ -78,7 +80,7 @@ export default function MarkdownEditor({ initialContent, filePath, filename }: M
           </button>
         </div>
         <div className="flex items-center gap-2">
-          <CopyButton text={content} label="Copy" />
+          <CopyButton content={content} />
           {mode === 'edit' && (
             <>
               <button

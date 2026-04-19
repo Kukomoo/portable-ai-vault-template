@@ -1,9 +1,9 @@
 'use client';
+
 import { useState } from 'react';
-import {
-  BTN_BASE, BTN_NEUTRAL, BTN_GREEN, BTN_RED,
-  IconCheck, IconDownload,
-} from '@/app/components/CopyButton';
+import { BTN_BASE, btnVariant } from '@/app/lib/ui';
+import { downloadBlob } from '@/app/lib/download';
+import { IconCheck, IconDownload } from '@/app/components/CopyButton';
 
 interface FileItem {
   name: string;
@@ -27,12 +27,11 @@ export default function ExportButton({ folders, spaceName }: ExportButtonProps) 
   async function handleExport() {
     setStatus('loading');
     try {
-      // Fetch all file contents in parallel across all folders
       const allFetches = folders.flatMap((folder) =>
         folder.files.map(async (file) => {
           const res = await fetch(`/api/file-content?path=${encodeURIComponent(file.path)}`);
           if (!res.ok) throw new Error(`Failed to fetch ${file.path}`);
-          const data = await res.json() as { content: string };
+          const data = (await res.json()) as { content: string };
           return {
             folder: folder.friendlyName,
             filename: file.name,
@@ -43,9 +42,12 @@ export default function ExportButton({ folders, spaceName }: ExportButtonProps) 
 
       const results = await Promise.all(allFetches);
 
-      // Group by folder and build the export text
       let output = `# ${spaceName} — AI Memory Export\n`;
-      output += `Generated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n`;
+      output += `Generated: ${new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })}\n`;
       output += `\n---\n\n`;
 
       let currentFolder = '';
@@ -60,16 +62,10 @@ export default function ExportButton({ folders, spaceName }: ExportButtonProps) 
         output += `\n\n---\n\n`;
       }
 
-      // Trigger browser download
-      const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${spaceName.toLowerCase().replace(/\s+/g, '-')}-ai-memory.txt`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      downloadBlob(
+        new Blob([output], { type: 'text/plain;charset=utf-8' }),
+        `${spaceName.toLowerCase().replace(/\s+/g, '-')}-ai-memory.txt`
+      );
 
       setStatus('done');
       setTimeout(() => setStatus('idle'), 2500);
@@ -84,9 +80,7 @@ export default function ExportButton({ folders, spaceName }: ExportButtonProps) 
     <button
       onClick={handleExport}
       disabled={status === 'loading'}
-      className={`${BTN_BASE} ${
-        status === 'done' ? BTN_GREEN : status === 'error' ? BTN_RED : BTN_NEUTRAL
-      }`}
+      className={`${BTN_BASE} ${btnVariant(status)}`}
     >
       {status === 'done' ? IconCheck : IconDownload}
       {status === 'loading'

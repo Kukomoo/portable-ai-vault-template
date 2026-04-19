@@ -1,7 +1,8 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { BTN_BASE, BTN_NEUTRAL, IconPlus } from '@/app/components/CopyButton';
+import { BTN_BASE, BTN_GREEN, BTN_NEUTRAL, BTN_RED } from '@/app/lib/ui';
+import { Plus } from 'lucide-react';
 
 interface NewFileButtonProps {
   repo: string;   // e.g. "hobbies"
@@ -59,7 +60,7 @@ export default function NewFileButton({ repo, folder }: NewFileButtonProps) {
   return (
     <>
       <button onClick={() => setOpen(true)} className={`${BTN_BASE} ${BTN_NEUTRAL}`}>
-        {IconPlus}
+        <Plus className="h-4 w-4" />
         New file
       </button>
 

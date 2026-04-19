@@ -65,7 +65,14 @@ function buildStarterTemplate(name: string, icon: string, description: string): 
   ].join('\n');
 }
 
+
 export async function POST(req: NextRequest) {
+    if (!GITHUB_TOKEN) {
+    return NextResponse.json(
+      { error: 'Missing GITHUB_TOKEN server env var' },
+      { status: 500 }
+    );
+  }
   try {
     const { name, icon, description } = await req.json();
 

@@ -25,13 +25,13 @@
     }
   },
   "include": [
-    "next-env.d.ts",
+    "../portable-ai-vault-template/next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-  ],
+, "../portable-ai-vault-template/next.config.ts"  ],
   // Explicitly excluding "node_modules" for clarity; add more exclusions here if needed.
   "exclude": ["node_modules"]
 }

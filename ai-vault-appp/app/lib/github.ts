@@ -1,49 +1,59 @@
 // app/lib/github.ts
 const GITHUB_API_BASE = 'https://api.github.com';
 
-const owner = process.env.GITHUB_OWNER!;
-const repo = process.env.GITHUB_REPO!;
+const owner = process.env.GITHUB_OWNER;
+const repo = process.env.GITHUB_REPO;
 const token = process.env.GITHUB_TOKEN;
 
 if (!owner || !repo) {
   console.warn('GITHUB_OWNER or GITHUB_REPO env vars are not set.');
 }
 
-// After
-async function githubFetch(path: string, repo: string = REPO_NAME ?? '') {
-  const url = `https://api.github.com/repos/${REPO_OWNER}/${repo}/contents/${path}`;
-  const res = await fetch(url, {
-    headers: authHeaders,
-    cache: 'no-store',           // ← always fresh from GitHub
-  });
-
-async function githubRequest<T>(
-  path: string,
-  method: string,
-  body?: unknown
-): Promise<T> {
+function getGithubHeaders(contentType = true): HeadersInit {
   const headers: HeadersInit = {
     Accept: 'application/vnd.github+json',
     'X-GitHub-Api-Version': '2022-11-28',
-    'Content-Type': 'application/json',
   };
+
+  if (contentType) {
+    headers['Content-Type'] = 'application/json';
+  }
+
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
+
+  return headers;
+}
+
+async function githubRequest<T>(
+  path: string,
+  method: 'GET' | 'PUT' = 'GET',
+  body?: unknown
+): Promise<T> {
   const res = await fetch(`${GITHUB_API_BASE}${path}`, {
     method,
-    headers,
+    headers: getGithubHeaders(method !== 'GET'),
     body: body ? JSON.stringify(body) : undefined,
     cache: 'no-store',
   });
+
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`GitHub API error: ${res.status} ${res.statusText} — ${text}`);
   }
+
   return res.json() as Promise<T>;
 }
 
-// Types based on GitHub "Get repository content" response
+function requireRepoEnv(): { owner: string; repo: string } {
+  if (!owner || !repo) {
+    throw new Error('Missing GITHUB_OWNER or GITHUB_REPO environment variables.');
+  }
+
+  return { owner, repo };
+}
+
 export type GithubContentItem = {
   name: string;
   path: string;
@@ -56,26 +66,26 @@ export type GithubContentItem = {
 };
 
 export type GithubFileContent = GithubContentItem & {
-  content: string; // base64 encoded
+  content: string;
   encoding: string;
 };
 
 export async function listDirectory(path: string): Promise<GithubContentItem[]> {
+  const { owner, repo } = requireRepoEnv();
   const encodedPath = path ? encodeURI(path) : '';
   const apiPath = `/repos/${owner}/${repo}/contents/${encodedPath}`;
-  return githubFetch<GithubContentItem[]>(apiPath);
+  return githubRequest<GithubContentItem[]>(apiPath);
 }
 
 export async function getFile(path: string): Promise<GithubFileContent> {
+  const { owner, repo } = requireRepoEnv();
   const encodedPath = encodeURI(path);
   const apiPath = `/repos/${owner}/${repo}/contents/${encodedPath}`;
-  return githubFetch<GithubFileContent>(apiPath);
+  return githubRequest<GithubFileContent>(apiPath);
 }
 
-/** Returns the decoded text content of a file. */
 export async function getFileContent(path: string): Promise<string> {
   const file = await getFile(path);
-  // GitHub returns base64 with newlines; strip them before decoding
   const cleaned = file.content.replace(/\n/g, '');
   return decodeURIComponent(escape(atob(cleaned)));
 }
@@ -91,8 +101,10 @@ export async function updateFileContent(
   sha: string,
   message: string
 ): Promise<void> {
+  const { owner, repo } = requireRepoEnv();
   const encoded = btoa(unescape(encodeURIComponent(content)));
   const apiPath = `/repos/${owner}/${repo}/contents/${encodeURI(path)}`;
+
   await githubRequest(apiPath, 'PUT', {
     message,
     content: encoded,
@@ -107,27 +119,23 @@ export type SearchResult = {
   text_matches?: { fragment: string }[];
 };
 
-export async function searchFiles(
-  query: string
-): Promise<SearchResult[]> {
-  const q = encodeURIComponent(
-    `${query} repo:${owner}/${repo} extension:md`
-  );
+export async function searchFiles(query: string): Promise<SearchResult[]> {
+  const { owner, repo } = requireRepoEnv();
+  const q = encodeURIComponent(`${query} repo:${owner}/${repo} extension:md`);
   const apiPath = `/search/code?q=${q}&per_page=30`;
-  const headers: HeadersInit = {
-    Accept: 'application/vnd.github.text-match+json',
-    'X-GitHub-Api-Version': '2022-11-28',
-  };
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
+
   const res = await fetch(`${GITHUB_API_BASE}${apiPath}`, {
-    headers,
+    headers: {
+      ...getGithubHeaders(false),
+      Accept: 'application/vnd.github.text-match+json',
+    },
     cache: 'no-store',
   });
+
   if (!res.ok) {
     throw new Error(`GitHub Search error: ${res.status} ${res.statusText}`);
   }
+
   const data = (await res.json()) as { items: SearchResult[] };
   return data.items;
 }

@@ -236,6 +236,8 @@ function ForestPathIcon() {
   );
 }
 
+
+
 const page1: IconPage = {
   id: 'knowledge-work',
   label: 'Knowledge & Work',
@@ -252,15 +254,6 @@ const page1: IconPage = {
     { id: 'robot', label: 'AI', svg: <Bot {...sceneStroke} /> },
     { id: 'tools', label: 'Tools', svg: <Wrench {...sceneStroke} /> },
     { id: 'memo', label: 'Notes', svg: <FileText {...sceneStroke} /> },
-    { id: 'palette', label: 'Design', svg: <Palette {...sceneStroke} /> },
-    { id: 'fire', label: 'Passion', svg: <Flame {...sceneStroke} /> },
-    { id: 'lightning', label: 'Energy', svg: <Zap {...sceneStroke} /> },
-    { id: 'seedling', label: 'Growth', svg: <Sprout {...sceneStroke} /> },
-    { id: 'trophy', label: 'Milestone', svg: <Trophy {...sceneStroke} /> },
-    { id: 'chart', label: 'Stats', svg: <PieChart {...sceneStroke} /> },
-    { id: 'puzzle', label: 'Problem', svg: <Puzzle {...sceneStroke} /> },
-    { id: 'folder', label: 'Archive', svg: <Folder {...sceneStroke} /> },
-    { id: 'key', label: 'Access', svg: <Key {...sceneStroke} /> },
   ],
 };
 
@@ -334,38 +327,11 @@ const page5: IconPage = {
   ],
 };
 
-const page6: IconPage = {
-  id: 'wellness-hobbies',
-  label: 'Wellness & Hobbies',
-  icons: [
-    { id: 'activity', label: 'Activity', svg: <Activity {...sceneStroke} /> },
-    { id: 'map', label: 'Plan', svg: <MapIcon {...sceneStroke} /> },
-    { id: 'gift', label: 'Share', svg: <Gift {...sceneStroke} /> },
-    { id: 'anchor', label: 'Stable', svg: <Anchor {...sceneStroke} /> },
-    { id: 'infinity', label: 'Continuous', svg: <Infinity {...sceneStroke} /> },
-    { id: 'sparkles-hobby', label: 'Magic', svg: <Sparkles {...sceneStroke} /> },
-    { id: 'fitness', label: 'Fitness', svg: <Dumbbell {...sceneStroke} /> },
-    { id: 'health', label: 'Health', svg: <HeartPulse {...sceneStroke} /> },
-    { id: 'cooking-item', label: 'Cooking', svg: <Utensils {...sceneStroke} /> },
-    { id: 'travel-item', label: 'Travel', svg: <Palmtree {...sceneStroke} /> },
-    { id: 'audio', label: 'Audio', svg: <Headphones {...sceneStroke} /> },
-    { id: 'gaming', label: 'Gaming', svg: <Gamepad2 {...sceneStroke} /> },
-    { id: 'timer', label: 'Timer', svg: <Timer {...sceneStroke} /> },
-    { id: 'nature-item', label: 'Nature', svg: <Leaf {...sceneStroke} /> },
-    { id: 'night', label: 'Night', svg: <Moon {...sceneStroke} /> },
-    { id: 'day', label: 'Day', svg: <Sun {...sceneStroke} /> },
-  ],
-};
-
-const ICON_PAGES: IconPage[] = [page1, page2, page3, page4, page5, page6];
-const DEFAULT_ICON_ID = page1.icons[0]?.id ?? 'brain';
-
-function getIconValue(icon: MemoryIcon) {
-  return icon.id;
-}
+const ICON_PAGES: IconPage[] = [page1, page2, page3, page4, page5];
+const DEFAULT_ICON_ID = page1.icons[0]?.id ?? 'work';
 
 function IconRenderer({ icon }: { icon: MemoryIcon }) {
-  return <div className="h-full w-full flex items-center justify-center">{icon.svg}</div>;
+  return <>{icon.svg}</>;
 }
 
 function IconPicker({
@@ -459,6 +425,7 @@ export default function NewMemoryButton({
   className = '',
 }: NewMemoryButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedIconId, setSelectedIconId] = useState(DEFAULT_ICON_ID);
@@ -479,6 +446,7 @@ export default function NewMemoryButton({
     setDescription('');
     setSelectedIconId(DEFAULT_ICON_ID);
     setIsSubmitting(false);
+    setErrorMessage('');
   };
 
   const closeModal = () => {
@@ -491,14 +459,34 @@ export default function NewMemoryButton({
 
     try {
       setIsSubmitting(true);
-      await onCreate?.({
+      setErrorMessage('');
+
+      const payload = {
         name: name.trim(),
         description: description.trim(),
-        icon: getIconValue(selectedIcon),
-      });
+        icon: selectedIcon.id,
+      };
+
+      if (onCreate) {
+        await onCreate(payload);
+      } else {
+        const res = await fetch('/api/memory-create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data?.error || 'Failed to create memory');
+        }
+      }
+
       closeModal();
     } catch (error) {
       console.error('Failed to create memory', error);
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to create memory');
       setIsSubmitting(false);
     }
   };
@@ -526,9 +514,9 @@ export default function NewMemoryButton({
       </button>
 
       {isOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl animate-in fade-in zoom-in duration-200">
-            <div className="mb-8 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8 sm:py-10">
+          <div className="w-full max-w-lg mx-4 my-8 rounded-3xl bg-white p-8 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="mb-2 flex items-center justify-between">
               <h2 className="text-2xl font-semibold text-neutral-900">New AI Memory</h2>
               <button
                 onClick={closeModal}
