@@ -29,7 +29,7 @@ type NewMemoryButtonProps = {
   className?: string;
 };
 
-const router = useRouter();
+
 
 const iconButtonBase =
   'flex h-14 w-14 items-center justify-center rounded-xl border border-neutral-200 bg-white text-2xl transition-all duration-150 hover:border-neutral-300 hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-neutral-300';
@@ -429,6 +429,7 @@ export default function NewMemoryButton({
   className = '',
 }: NewMemoryButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
   const [errorMessage, setErrorMessage] = useState('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');

@@ -3,6 +3,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import { highlightMatches } from '@/app/lib/highlight';
 
 interface SearchResult {
   name: string;
@@ -128,18 +129,18 @@ export default function SearchPage() {
                   key={i}
                   className="border-b border-neutral-100 last:border-none px-4 py-3 hover:bg-neutral-50 transition-colors"
                 >
-                  <Link href={appUrl} className="block">
+                  <Link href={`${appUrl}?q=${encodeURIComponent(query)}`} className="block">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-base">📄</span>
-                      <span className="font-medium text-sm text-neutral-900">{file}</span>
+                      <span className="font-medium text-sm text-neutral-900">{highlightMatches(file, query.trim())}</span>
                       <span className="text-[11px] text-neutral-400">{folder}</span>
                     </div>
                     {fragment && (
                       <p className="text-xs text-neutral-500 pl-6 line-clamp-2">
-                        ...{fragment}...
+                        ...{highlightMatches(fragment, query)}...
                       </p>
                     )}
-                    <p className="text-[11px] text-neutral-400 pl-6 mt-0.5">{result.path}</p>
+                    <p className="text-[11px] text-neutral-400 pl-6 mt-0.5">{highlightMatches(result.path, query.trim())}</p>
                   </Link>
                 </li>
               );
