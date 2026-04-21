@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import NewMemoryButton from '@/app/components/NewMemoryButton';
-import MemoryIcon from './MemoryIcon';
+import MemoryIcon from '@/app/components/MemoryIcon';
 
 interface Vault {
   slug: string;
